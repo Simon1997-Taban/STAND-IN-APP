@@ -3,10 +3,28 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
 
+// Get admin count for registration limit
+router.get('/admin-count', async (req, res) => {
+  try {
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    res.json({ count: adminCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Register
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, phone, role, services, hourlyRate } = req.body;
+    
+    // Check admin limit
+    if (role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount >= 2) {
+        return res.status(400).json({ message: 'Admin registration is limited to 2 users (Director and Manager)' });
+      }
+    }
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {

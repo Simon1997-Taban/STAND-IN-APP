@@ -279,6 +279,7 @@
                         <option value="">Select your primary goal...</option>
                         <option value="client">Request Services (I need help)</option>
                         <option value="provider">Provide Services (I want to help others)</option>
+                        <option value="admin">Admin Access (Restricted)</option>
                     </select>
                 </div>
             </div>
@@ -430,6 +431,24 @@
             
             const role = document.getElementById('role').value;
             
+            // Check admin registration limit
+            if (role === 'admin') {
+                try {
+                    const adminCheckResponse = await fetch('/api/auth/admin-count');
+                    const adminData = await adminCheckResponse.json();
+                    
+                    if (adminData.count >= 2) {
+                        showError('Admin registration is limited to 2 users only (Director and Manager).');
+                        setLoading(false);
+                        return;
+                    }
+                } catch (error) {
+                    showError('Error checking admin limit. Please try again.');
+                    setLoading(false);
+                    return;
+                }
+            }
+            
             // Validate provider fields
             if (role === 'provider') {
                 if (selectedServices.size === 0) {
@@ -481,8 +500,8 @@
                         } else {
                             // Check if user wants to setup payment later
                             const setupLater = document.getElementById('setupPaymentLater').checked;
-                            if (setupLater) {
-                                window.location.href = 'dashboard.html';
+                            if (setupLater || result.user.role === 'admin') {
+                                window.location.href = result.user.role === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
                             } else {
                                 window.location.href = 'payment-setup.html';
                             }
