@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stand-In App - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo h1 { font-size: 24px; }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover { background: rgba(255,255,255,0.3); }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .dashboard-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .service-body {
+            padding: 20px;
+        }
+        
+        .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .provider-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ffa500;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .requests-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .request-item {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .request-item:last-child {
+            border-bottom: none;
+        }
+        
+        .request-info h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .request-meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-accepted { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <h1>Stand-In</h1>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar"></div>
+            <div>
+                <div id="userName"></div>
+                <div id="userRole" style="font-size: 12px; opacity: 0.8;"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="dashboard-nav">
+            <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
+            <button class="nav-tab" onclick="showTab('services')" id="servicesTab">Browse Services</button>
+            <button class="nav-tab" onclick="showTab('requests')">My Requests</button>
+            <button class="nav-tab" onclick="showTab('location')">Location</button>
+            <button class="nav-tab" onclick="showTab('payments')">Payments</button>
+            <button class="nav-tab" onclick="showTab('profile')">Profile</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRequests">0</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeRequests">0</div>
+                    <div class="stat-label">Active Requests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedRequests">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card" id="earningsCard" style="display: none;">
+                    <div class="stat-number" id="totalEarnings">$0</div>
+                    <div class="stat-label">Total Earnings</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Services Tab -->
+        <div id="services" class="tab-content">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
+                <h2>Available Services</h2>
+                <select id="serviceFilter" onchange="filterServices()">
+                    <option value="">All Services</option>
+                    <option value="tutoring">Tutoring</option>
+                    <option value="companionship">Companionship</option>
+                    <option value="counseling">Counseling</option>
+                    <option value="fitness">Fitness</option>
+                    <option value="cooking">Cooking</option>
+                    <option value="walking">Walking</option>
+                    <option value="dancing">Dancing</option>
+                    <option value="conversation">Conversation</option>
+                </select>
+            </div>
+            <div class="services-grid" id="servicesGrid"></div>
+        </div>
+        
+        <!-- Requests Tab -->
+        <div id="requests" class="tab-content">
+            <h2>My Requests</h2>
+            <div class="requests-list" id="requestsList"></div>
+        </div>
+        
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content">
+            <h2>Profile Settings</h2>
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="profileName">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="profilePhone">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="profileLocation">
+                    </div>
+                    <div class="form-group">
+                        <label>Bio</label>
+                        <textarea id="profileBio" placeholder="Tell us about yourself..."></textarea>
+                    </div>
+                    <div id="providerFields" style="display: none;">
+                        <div class="form-group">
+                            <label>Hourly Rate ($)</label>
+                            <input type="number" id="profileRate" min="1">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Update Profile</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Payments Tab -->
+        <div id="payments" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Payment Management</h2>
+                <a href="payment-setup.html" class="btn">Manage Payment Methods</a>
+            </div>
+            
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEarningsDisplay">$0</div>
+                    <div class="stat-label">Total Earnings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingPayments">0</div>
+                    <div class="stat-label">Pending Payments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedPayments">0</div>
+                    <div class="stat-label">Completed Payments</div>
+                </div>
+            </div>
+            
+            <div class="requests-list" id="transactionsList">
+                <div class="empty-state">
+                    <h3>No transactions yet</h3>
+                    <p>Your payment history will appear here</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Location Tab -->
+        <div id="location" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Location Management</h2>
+                <a href="location-share.html" class="btn">📍 Share Location</a>
+            </div>
+            
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-number" id="sharedLocations">0</div>
+                    <div class="stat-label">Shared Locations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="liveLocations">0</div>
+                    <div class="stat-label">Live Locations</div>
+                </div>
+                <div class="stat-card" id="receivedLocationsCard" style="display: none;">
+                    <div class="stat-number" id="receivedLocations">0</div>
+                    <div class="stat-label">Received Locations</div>
+                </div>
+            </div>
+            
+            <div class="requests-list" id="locationsList">
+                <div class="empty-state">
+                    <h3>No locations shared yet</h3>
+                    <p>Share your location to help service providers find you</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Request Service Modal -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Request Service</h3>
+            <form id="requestForm">
+                <input type="hidden" id="selectedProviderId">
+                <div class="form-group">
+                    <label>Service Title</label>
+                    <input type="text" id="requestTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="requestDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Duration (hours)</label>
+                    <input type="number" id="requestDuration" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Date & Time</label>
+                    <input type="datetime-local" id="requestDate">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="requestLocation">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="requestOnline"> Online Service
+                    </label>
+                </div>
+                <button type="submit" class="btn">Send Request</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let currentUser = null;
+        let socket = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initializeSocket();
+            loadDashboard();
+        });
+        
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(user);
+            
+            // Update UI based on user
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            
+            // Show/hide tabs based on role
+            if (currentUser.role === 'provider') {
+                document.getElementById('servicesTab').textContent = 'My Services';
+                document.getElementById('earningsCard').style.display = 'block';
+                document.getElementById('providerFields').style.display = 'block';
+            }
+        }
+        
+        function initializeSocket() {
+            socket = io();
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+        }
+        
+        async function loadDashboard() {
+            await Promise.all([
+                loadStats(),
+                loadServices(),
+                loadRequests(),
+                loadProfile(),
+                loadTransactions(),
+                loadLocations()
+            ]);
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/requests/my-requests', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    const requests = await response.json();
+                    
+                    document.getElementById('totalRequests').textContent = requests.length;
+                    document.getElementById('activeRequests').textContent = 
+                        requests.filter(r => ['pending', 'accepted', 'in-progress'].includes(r.status)).length;
+                    document.getElementById('completedRequests').textContent = 
+                        requests.filter(r => r.status === 'completed').length;
+                    
+                    if (currentUser.role === 'provider') {
+                        const earnings = requests
+                            .filter(r => r.status === 'completed' && r.paymentStatus === 'paid')
+                            .reduce((sum, r) => sum + (r.totalAmount - r.adminCommission), 0);
+                        document.getElementById('totalEarnings').textContent = `$${earnings.toFixed(2)}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        async function loadServices() {
+            try {
+                const response = await fetch('/api/services/providers');
+                
+                if (response.ok) {
+                    const providers = await response.json();
+                    displayServices(providers);
+                }
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
+        
+        function displayServices(providers) {
+            const grid = document.getElementById('servicesGrid');
+            
+            if (providers.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h3>No services available</h3><p>Check back later for new providers.</p></div>';
+                return;
+            }
+            
+            grid.innerHTML = providers.map(provider => `
+                <div class="service-card">
+                    <div class="service-header">
+                        <h3>${provider.services.join(', ')}</h3>
+                        <p>$${provider.hourlyRate}/hour</p>
+                    </div>
+                    <div class="service-body">
+                        <div class="provider-info">
+                            <div class="provider-avatar">${provider.name.charAt(0)}</div>
+                            <div>
+                                <h4>${provider.name}</h4>
+                                <div class="rating">
+                                    ${'★'.repeat(Math.floor(provider.rating))}${'☆'.repeat(5-Math.floor(provider.rating))}
+                                    <span>(${provider.totalReviews})</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p>${provider.bio || 'Professional service provider'}</p>
+                        <p><strong>Location:</strong> ${provider.location || 'Not specified'}</p>
+                        ${currentUser.role === 'client' ? 
+                            `<button class="btn" onclick="requestService('${provider._id}')">Request Service</button>` : 
+                            ''
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadRequests() {
+            try {
+                const response = await fetch('/api/requests/my-requests', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    const requests = await response.json();
+                    displayRequests(requests);
+                }
+            } catch (error) {
+                console.error('Error loading requests:', error);
+            }
+        }
+        
+        function displayRequests(requests) {
+            const list = document.getElementById('requestsList');
+            
+            if (requests.length === 0) {
+                list.innerHTML = '<div class="empty-state"><h3>No requests yet</h3><p>Start by browsing available services.</p></div>';
+                return;
+            }
+            
+            list.innerHTML = requests.map(request => `
+                <div class="request-item">
+                    <div class="request-info">
+                        <h4>${request.title}</h4>
+                        <div class="request-meta">
+                            ${currentUser.role === 'client' ? 
+                                `Provider: ${request.provider.name}` : 
+                                `Client: ${request.client.name}`
+                            } • 
+                            ${new Date(request.createdAt).toLocaleDateString()} • 
+                            $${request.totalAmount}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="status-badge status-${request.status}">${request.status}</span>
+                        ${getRequestActions(request)}
+                        ${request.status === 'accepted' && request.paymentStatus === 'pending' && currentUser.role === 'client' ? 
+                            `<button class="btn" onclick="processPayment('${request._id}')">Pay Now</button>` : 
+                            ''
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getRequestActions(request) {
+            if (currentUser.role === 'provider' && request.status === 'pending') {
+                return `
+                    <button class="btn btn-success" onclick="updateRequestStatus('${request._id}', 'accepted')">Accept</button>
+                    <button class="btn btn-danger" onclick="updateRequestStatus('${request._id}', 'rejected')">Reject</button>
+                `;
+            }
+            
+            if (request.status === 'accepted') {
+                return `<button class="btn" onclick="openChat('${request.chatRoom}')">Chat</button>`;
+            }
+            
+            return '';
+        }
+        
+        async function loadProfile() {
+            // Profile form will be populated with current user data
+            document.getElementById('profileName').value = currentUser.name || '';
+            // Additional profile loading would go here
+        }
+        
+        async function loadTransactions() {
+            try {
+                const response = await fetch('/api/payments/transactions', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    const transactions = await response.json();
+                    displayTransactions(transactions);
+                    updatePaymentStats(transactions);
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+        
+        function displayTransactions(transactions) {
+            const list = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                list.innerHTML = '<div class="empty-state"><h3>No transactions yet</h3><p>Your payment history will appear here</p></div>';
+                return;
+            }
+            
+            list.innerHTML = transactions.map(transaction => `
+                <div class="request-item">
+                    <div class="request-info">
+                        <h4>${transaction.serviceRequest.title}</h4>
+                        <div class="request-meta">
+                            ${currentUser.role === 'client' ? 
+                                `Provider: ${transaction.provider.name}` : 
+                                `Client: ${transaction.client.name}`
+                            } • 
+                            ${new Date(transaction.createdAt).toLocaleDateString()} • 
+                            Receipt: ${transaction.receiptNumber}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="text-align: right;">
+                            <div style="font-weight: 500;">$${transaction.totalAmount}</div>
+                            ${currentUser.role === 'provider' ? 
+                                `<div style="font-size: 12px; color: #666;">You earn: $${transaction.providerAmount}</div>` : 
+                                `<div style="font-size: 12px; color: #666;">Commission: $${transaction.adminCommission}</div>`
+                            }
+                        </div>
+                        <span class="status-badge status-${transaction.status}">${transaction.status.toUpperCase()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updatePaymentStats(transactions) {
+            const completed = transactions.filter(t => t.status === 'completed');
+            const pending = transactions.filter(t => t.status === 'pending' || t.status === 'processing');
+            
+            document.getElementById('completedPayments').textContent = completed.length;
+            document.getElementById('pendingPayments').textContent = pending.length;
+            
+            if (currentUser.role === 'provider') {
+                const totalEarnings = completed.reduce((sum, t) => sum + t.providerAmount, 0);
+                document.getElementById('totalEarningsDisplay').textContent = `$${totalEarnings.toFixed(2)}`;
+            } else {
+                const totalSpent = completed.reduce((sum, t) => sum + t.totalAmount, 0);
+                document.getElementById('totalEarningsDisplay').textContent = `$${totalSpent.toFixed(2)}`;
+                document.querySelector('#totalEarningsDisplay').nextElementSibling.textContent = 'Total Spent';
+            }
+        }
+        
+        async function processPayment(requestId) {
+            try {
+                // First check if user has payment methods
+                const methodsResponse = await fetch('/api/payments/methods', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (methodsResponse.ok) {
+                    const methods = await methodsResponse.json();
+                    if (methods.length === 0) {
+                        if (confirm('You need to add a payment method first. Go to payment setup?')) {
+                            window.location.href = 'payment-setup.html';
+                        }
+                        return;
+                    }
+                    
+                    // Use default payment method
+                    const defaultMethod = methods.find(m => m.isDefault) || methods[0];
+                    
+                    const response = await fetch(`/api/payments/process/${requestId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({ clientPaymentMethodId: defaultMethod._id })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert(`Payment initiated successfully! Total: $${result.breakdown.totalAmount}, Provider gets: $${result.breakdown.providerAmount}, Commission: $${result.breakdown.adminCommission}`);
+                        loadRequests();
+                        loadStats();
+                        loadTransactions();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+        
+        async function loadLocations() {
+            try {
+                // Load user's shared locations
+                const myLocationsResponse = await fetch('/api/locations/user/my-locations', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (myLocationsResponse.ok) {
+                    const myLocations = await myLocationsResponse.json();
+                    displayLocations(myLocations);
+                    updateLocationStats(myLocations);
+                }
+                
+                // Load locations shared with user (for providers)
+                if (currentUser.role === 'provider') {
+                    const sharedWithMeResponse = await fetch('/api/locations/shared/with-me', {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    
+                    if (sharedWithMeResponse.ok) {
+                        const sharedLocations = await sharedWithMeResponse.json();
+                        document.getElementById('receivedLocationsCard').style.display = 'block';
+                        document.getElementById('receivedLocations').textContent = sharedLocations.length;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading locations:', error);
+            }
+        }
+        
+        function displayLocations(locations) {
+            const list = document.getElementById('locationsList');
+            
+            if (locations.length === 0) {
+                list.innerHTML = '<div class="empty-state"><h3>No locations shared yet</h3><p>Share your location to help service providers find you</p></div>';
+                return;
+            }
+            
+            list.innerHTML = locations.map(location => `
+                <div class="request-item">
+                    <div class="request-info">
+                        <h4>
+                            ${location.isLiveSharing ? '🔴' : '📍'} 
+                            ${location.locationName || 'Shared Location'}
+                        </h4>
+                        <div class="request-meta">
+                            ${location.address?.fullAddress || `${location.coordinates.latitude}, ${location.coordinates.longitude}`}
+                            ${location.serviceRequest ? ` • ${location.serviceRequest.title}` : ''}
+                            • ${new Date(location.createdAt).toLocaleDateString()}
+                            ${location.expiresAt ? ` • Expires: ${new Date(location.expiresAt).toLocaleString()}` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="status-badge status-${location.isLiveSharing ? 'accepted' : 'completed'}">
+                            ${location.isLiveSharing ? 'LIVE' : 'STATIC'}
+                        </span>
+                        <button class="btn btn-secondary" onclick="viewSharedLocation('${location._id}')">View</button>
+                        ${location.isLiveSharing ? 
+                            `<button class="btn btn-danger" onclick="stopLocationSharing('${location._id}')">Stop</button>` :
+                            `<button class="btn btn-danger" onclick="deleteSharedLocation('${location._id}')">Delete</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateLocationStats(locations) {
+            const liveCount = locations.filter(l => l.isLiveSharing).length;
+            
+            document.getElementById('sharedLocations').textContent = locations.length;
+            document.getElementById('liveLocations').textContent = liveCount;
+        }
+        
+        function viewSharedLocation(locationId) {
+            window.open(`location-view.html?id=${locationId}`, '_blank');
+        }
+        
+        async function stopLocationSharing(locationId) {
+            try {
+                const response = await fetch(`/api/locations/stop-live/${locationId}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    alert('Live location sharing stopped');
+                    loadLocations();
+                } else {
+                    const result = await response.json();
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+        
+        async function deleteSharedLocation(locationId) {
+            if (!confirm('Are you sure you want to delete this shared location?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/locations/${locationId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    alert('Location deleted successfully');
+                    loadLocations();
+                } else {
+                    const result = await response.json();
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function requestService(providerId) {
+            document.getElementById('selectedProviderId').value = providerId;
+            document.getElementById('requestModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('requestModal').style.display = 'none';
+        }
+        
+        async function updateRequestStatus(requestId, status) {
+            try {
+                const response = await fetch(`/api/requests/${requestId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                
+                if (response.ok) {
+                    loadRequests(); // Reload requests
+                    loadStats(); // Update stats
+                }
+            } catch (error) {
+                console.error('Error updating request:', error);
+            }
+        }
+        
+        function openChat(roomId) {
+            window.open(`chat.html?room=${roomId}`, '_blank', 'width=400,height=600');
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+        
+        // Form submissions
+        document.getElementById('requestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                providerId: document.getElementById('selectedProviderId').value,
+                serviceType: 'general', // You might want to make this dynamic
+                title: document.getElementById('requestTitle').value,
+                description: document.getElementById('requestDescription').value,
+                duration: parseInt(document.getElementById('requestDuration').value),
+                scheduledDate: document.getElementById('requestDate').value,
+                location: document.getElementById('requestLocation').value,
+                isOnline: document.getElementById('requestOnline').checked
+            };
+            
+            try {
+                const response = await fetch('/api/requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    closeModal();
+                    loadRequests();
+                    loadStats();
+                    alert('Request sent successfully!');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.message);
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('requestModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

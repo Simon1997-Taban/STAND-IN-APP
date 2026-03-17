@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Setup - Stand-In App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo h1 { font-size: 24px; }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .payment-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .payment-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .payment-methods-list {
+            margin-top: 30px;
+        }
+        
+        .payment-method-card {
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .payment-method-card.default {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+        
+        .method-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .method-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .method-icon.bank { background: #007bff; }
+        .method-icon.mobile { background: #28a745; }
+        .method-icon.paypal { background: #0070ba; }
+        
+        .method-details h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .method-details p {
+            color: #666;
+            font-size: 14px;
+            margin: 2px 0;
+        }
+        
+        .method-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .badge.default {
+            background: #007bff;
+        }
+        
+        .badge.unverified {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .mobile-providers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .provider-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .provider-option:hover {
+            border-color: #667eea;
+        }
+        
+        .provider-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .provider-logo {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .mtn { background: #ffcc00; color: #333; }
+        .airtel { background: #ff0000; }
+        .vodafone { background: #e60000; }
+        .orange { background: #ff6600; }
+        .mpesa { background: #00a651; }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <h1>Payment Setup</h1>
+        </div>
+        <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+    
+    <div class="container">
+        <div class="alert alert-info">
+            <strong>Secure Payment Setup</strong><br>
+            Add your payment methods to receive payments as a provider or make payments as a client. All information is encrypted and secure.
+        </div>
+        
+        <div id="alertContainer"></div>
+        
+        <!-- Add Payment Method Section -->
+        <div class="payment-section">
+            <div class="section-title">
+                💳 Add Payment Method
+            </div>
+            
+            <div class="payment-tabs">
+                <button class="tab-btn active" onclick="showTab('bank')">🏦 Bank Account</button>
+                <button class="tab-btn" onclick="showTab('mobile')">📱 Mobile Money</button>
+                <button class="tab-btn" onclick="showTab('digital')">💻 Digital Wallet</button>
+            </div>
+            
+            <!-- Bank Account Tab -->
+            <div id="bank" class="tab-content active">
+                <form id="bankForm">
+                    <div class="form-group">
+                        <label for="bankName">Bank Name *</label>
+                        <input type="text" id="bankName" required placeholder="e.g., Chase Bank, Bank of America">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="accountNumber">Account Number *</label>
+                            <input type="text" id="accountNumber" required placeholder="Your account number">
+                        </div>
+                        <div class="form-group">
+                            <label for="routingNumber">Routing Number</label>
+                            <input type="text" id="routingNumber" placeholder="For US banks">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accountName">Account Holder Name *</label>
+                        <input type="text" id="accountName" required placeholder="Full name as on account">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="swiftCode">SWIFT Code</label>
+                        <input type="text" id="swiftCode" placeholder="For international transfers">
+                        <div class="help-text">Required for international payments</div>
+                    </div>
+                    
+                    <button type="submit" class="btn">
+                        <span class="btn-text">Add Bank Account</span>
+                        <span class="btn-loading loading" style="display: none;"></span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Mobile Money Tab -->
+            <div id="mobile" class="tab-content">
+                <form id="mobileForm">
+                    <div class="form-group">
+                        <label>Mobile Money Provider *</label>
+                        <div class="mobile-providers">
+                            <div class="provider-option" data-provider="mtn">
+                                <div class="provider-logo mtn">MTN</div>
+                                <span>MTN</span>
+                            </div>
+                            <div class="provider-option" data-provider="airtel">
+                                <div class="provider-logo airtel">A</div>
+                                <span>Airtel</span>
+                            </div>
+                            <div class="provider-option" data-provider="vodafone">
+                                <div class="provider-logo vodafone">V</div>
+                                <span>Vodafone</span>
+                            </div>
+                            <div class="provider-option" data-provider="orange">
+                                <div class="provider-logo orange">O</div>
+                                <span>Orange</span>
+                            </div>
+                            <div class="provider-option" data-provider="mpesa">
+                                <div class="provider-logo mpesa">M</div>
+                                <span>M-Pesa</span>
+                            </div>
+                            <div class="provider-option" data-provider="other">
+                                <div class="provider-logo" style="background: #666;">?</div>
+                                <span>Other</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedProvider" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mobileNumber">Mobile Number *</label>
+                            <input type="tel" id="mobileNumber" required placeholder="+1234567890">
+                        </div>
+                        <div class="form-group">
+                            <label for="mobileAccountName">Account Name *</label>
+                            <input type="text" id="mobileAccountName" required placeholder="Name on mobile money account">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn">
+                        <span class="btn-text">Add Mobile Money</span>
+                        <span class="btn-loading loading" style="display: none;"></span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Digital Wallet Tab -->
+            <div id="digital" class="tab-content">
+                <form id="digitalForm">
+                    <div class="form-group">
+                        <label for="walletType">Wallet Type *</label>
+                        <select id="walletType" required>
+                            <option value="">Select wallet type...</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="stripe">Stripe</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="walletEmail">Email Address *</label>
+                        <input type="email" id="walletEmail" required placeholder="your@email.com">
+                        <div class="help-text">Email associated with your digital wallet</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="walletId">Wallet ID (Optional)</label>
+                        <input type="text" id="walletId" placeholder="Wallet ID or username">
+                    </div>
+                    
+                    <button type="submit" class="btn">
+                        <span class="btn-text">Add Digital Wallet</span>
+                        <span class="btn-loading loading" style="display: none;"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Existing Payment Methods -->
+        <div class="payment-section">
+            <div class="section-title">
+                💼 Your Payment Methods
+            </div>
+            
+            <div id="paymentMethodsList" class="payment-methods-list">
+                <div class="empty-state">
+                    <h3>No payment methods added yet</h3>
+                    <p>Add a payment method above to get started</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        let paymentMethods = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadPaymentMethods();
+            setupEventListeners();
+        });
+        
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(user);
+        }
+        
+        function setupEventListeners() {
+            // Mobile provider selection
+            document.querySelectorAll('.provider-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.provider-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('selectedProvider').value = this.dataset.provider;
+                });
+            });
+            
+            // Form submissions
+            document.getElementById('bankForm').addEventListener('submit', handleBankSubmit);
+            document.getElementById('mobileForm').addEventListener('submit', handleMobileSubmit);
+            document.getElementById('digitalForm').addEventListener('submit', handleDigitalSubmit);
+        }
+        
+        async function handleBankSubmit(e) {
+            e.preventDefault();
+            setFormLoading('bankForm', true);
+            
+            const formData = {
+                type: 'bank_account',
+                bankName: document.getElementById('bankName').value,
+                accountNumber: document.getElementById('accountNumber').value,
+                accountName: document.getElementById('accountName').value,
+                routingNumber: document.getElementById('routingNumber').value,
+                swiftCode: document.getElementById('swiftCode').value
+            };
+            
+            await submitPaymentMethod(formData, 'bankForm');
+        }
+        
+        async function handleMobileSubmit(e) {
+            e.preventDefault();
+            setFormLoading('mobileForm', true);
+            
+            const selectedProvider = document.getElementById('selectedProvider').value;
+            if (!selectedProvider) {
+                showAlert('Please select a mobile money provider', 'error');
+                setFormLoading('mobileForm', false);
+                return;
+            }
+            
+            const formData = {
+                type: 'mobile_money',
+                mobileProvider: selectedProvider,
+                mobileNumber: document.getElementById('mobileNumber').value,
+                mobileAccountName: document.getElementById('mobileAccountName').value
+            };
+            
+            await submitPaymentMethod(formData, 'mobileForm');
+        }
+        
+        async function handleDigitalSubmit(e) {
+            e.preventDefault();
+            setFormLoading('digitalForm', true);
+            
+            const walletType = document.getElementById('walletType').value;
+            
+            const formData = {
+                type: walletType,
+                walletEmail: document.getElementById('walletEmail').value,
+                walletId: document.getElementById('walletId').value
+            };
+            
+            await submitPaymentMethod(formData, 'digitalForm');
+        }
+        
+        async function submitPaymentMethod(formData, formId) {
+            try {
+                const response = await fetch('/api/payments/methods', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Payment method added successfully!', 'success');
+                    document.getElementById(formId).reset();
+                    if (formId === 'mobileForm') {
+                        document.querySelectorAll('.provider-option').forEach(opt => opt.classList.remove('selected'));
+                        document.getElementById('selectedProvider').value = '';
+                    }
+                    loadPaymentMethods();
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.', 'error');
+            } finally {
+                setFormLoading(formId, false);
+            }
+        }
+        
+        async function loadPaymentMethods() {
+            try {
+                const response = await fetch('/api/payments/methods', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    paymentMethods = await response.json();
+                    displayPaymentMethods();
+                }
+            } catch (error) {
+                console.error('Error loading payment methods:', error);
+            }
+        }
+        
+        function displayPaymentMethods() {
+            const container = document.getElementById('paymentMethodsList');
+            
+            if (paymentMethods.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No payment methods added yet</h3>
+                        <p>Add a payment method above to get started</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = paymentMethods.map(method => `
+                <div class="payment-method-card ${method.isDefault ? 'default' : ''}">
+                    <div class="method-info">
+                        <div class="method-icon ${method.type === 'bank_account' ? 'bank' : method.type === 'mobile_money' ? 'mobile' : 'paypal'}">
+                            ${getMethodIcon(method.type)}
+                        </div>
+                        <div class="method-details">
+                            <h4>${getMethodTitle(method)}</h4>
+                            <p>${getMethodDescription(method)}</p>
+                            <div style="margin-top: 5px;">
+                                ${method.isDefault ? '<span class="badge default">Default</span>' : ''}
+                                ${method.isVerified ? '<span class="badge">Verified</span>' : '<span class="badge unverified">Unverified</span>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="method-actions">
+                        ${!method.isDefault ? `<button class="btn btn-secondary" onclick="setDefault('${method._id}')">Set Default</button>` : ''}
+                        <button class="btn btn-danger" onclick="deleteMethod('${method._id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getMethodIcon(type) {
+            switch(type) {
+                case 'bank_account': return '🏦';
+                case 'mobile_money': return '📱';
+                case 'paypal': return '💳';
+                case 'stripe': return '💳';
+                default: return '💳';
+            }
+        }
+        
+        function getMethodTitle(method) {
+            switch(method.type) {
+                case 'bank_account': return method.bankName || 'Bank Account';
+                case 'mobile_money': return `${method.mobileProvider?.toUpperCase()} Mobile Money`;
+                case 'paypal': return 'PayPal';
+                case 'stripe': return 'Stripe';
+                default: return 'Payment Method';
+            }
+        }
+        
+        function getMethodDescription(method) {
+            switch(method.type) {
+                case 'bank_account': 
+                    return `${method.accountName} • ****${method.accountNumber?.slice(-4)}`;
+                case 'mobile_money': 
+                    return `${method.mobileAccountName} • ${method.mobileNumber}`;
+                case 'paypal':
+                case 'stripe':
+                    return method.walletEmail;
+                default: return 'Payment method';
+            }
+        }
+        
+        async function setDefault(methodId) {
+            try {
+                const response = await fetch(`/api/payments/methods/${methodId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ isDefault: true })
+                });
+                
+                if (response.ok) {
+                    showAlert('Default payment method updated!', 'success');
+                    loadPaymentMethods();
+                } else {
+                    const result = await response.json();
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.', 'error');
+            }
+        }
+        
+        async function deleteMethod(methodId) {
+            if (!confirm('Are you sure you want to delete this payment method?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/payments/methods/${methodId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (response.ok) {
+                    showAlert('Payment method deleted successfully!', 'success');
+                    loadPaymentMethods();
+                } else {
+                    const result = await response.json();
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.', 'error');
+            }
+        }
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function setFormLoading(formId, loading) {
+            const form = document.getElementById(formId);
+            const btn = form.querySelector('button[type="submit"]');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoading = btn.querySelector('.btn-loading');
+            
+            btn.disabled = loading;
+            btnText.style.display = loading ? 'none' : 'inline';
+            btnLoading.style.display = loading ? 'inline-block' : 'none';
+        }
+        
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-error' : 'alert-info';
+            
+            container.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

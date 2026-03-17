@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Location - Stand-In App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo h1 { font-size: 20px; }
+        
+        .location-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+        }
+        
+        .location-info {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .map-placeholder {
+            text-align: center;
+            color: #666;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .info-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+        
+        .coordinates {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .accuracy-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .accuracy-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+        
+        .accuracy-high { border-color: #28a745; background: rgba(40, 167, 69, 0.2); }
+        .accuracy-medium { border-color: #ffc107; background: rgba(255, 193, 7, 0.2); }
+        .accuracy-low { border-color: #dc3545; background: rgba(220, 53, 69, 0.2); }
+        
+        .live-updates {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .update-time {
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        .directions-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <h1>📍 Location View</h1>
+        </div>
+        <div class="location-status" id="locationStatus">
+            <span>Loading...</span>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="location-info">
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Loading location details...</p>
+            </div>
+            
+            <div id="errorState" class="alert alert-error" style="display: none;">
+                <strong>Error loading location</strong><br>
+                <span id="errorMessage">Please try again later.</span>
+            </div>
+            
+            <div id="locationDetails" style="display: none;">
+                <!-- User Information -->
+                <div class="info-section">
+                    <div class="section-title">
+                        👤 Shared By
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Name</div>
+                        <div class="info-value" id="userName">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value" id="userPhone">-</div>
+                    </div>
+                </div>
+                
+                <!-- Location Information -->
+                <div class="info-section">
+                    <div class="section-title">
+                        📍 Location Details
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Address</div>
+                        <div class="info-value" id="locationAddress">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Coordinates</div>
+                        <div class="coordinates" id="locationCoordinates">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Accuracy</div>
+                        <div class="accuracy-indicator">
+                            <div class="accuracy-circle" id="accuracyCircle"></div>
+                            <span id="accuracyText">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Information -->
+                <div class="info-section" id="additionalInfo">
+                    <div class="section-title">
+                        ℹ️ Additional Information
+                    </div>
+                    <div class="info-item" id="locationNameItem" style="display: none;">
+                        <div class="info-label">Location Name</div>
+                        <div class="info-value" id="locationName">-</div>
+                    </div>
+                    <div class="info-item" id="instructionsItem" style="display: none;">
+                        <div class="info-label">Instructions</div>
+                        <div class="info-value" id="locationInstructions">-</div>
+                    </div>
+                    <div class="info-item" id="landmarksItem" style="display: none;">
+                        <div class="info-label">Landmarks</div>
+                        <div class="info-value" id="locationLandmarks">-</div>
+                    </div>
+                </div>
+                
+                <!-- Live Updates -->
+                <div id="liveUpdatesSection" class="live-updates" style="display: none;">
+                    <div class="section-title">
+                        🔴 Live Location
+                    </div>
+                    <p>This location is being updated in real-time</p>
+                    <div class="update-time" id="lastUpdate">Last updated: -</div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="directions-section">
+                    <div class="section-title">
+                        🧭 Navigation
+                    </div>
+                    <a href="#" id="googleMapsLink" class="btn" target="_blank">Open in Google Maps</a>
+                    <a href="#" id="appleMapsLink" class="btn btn-secondary" target="_blank">Open in Apple Maps</a>
+                    <button class="btn btn-success" onclick="getDirections()">Get Directions</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <div class="map-placeholder">
+                <h3>📍 Interactive Map</h3>
+                <p>Map integration would be displayed here</p>
+                <p style="margin-top: 10px; color: #999; font-size: 14px;">
+                    In production, this would show Google Maps, OpenStreetMap, or similar mapping service
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let locationId = null;
+        let locationData = null;
+        let socket = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get location ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            locationId = urlParams.get('id');
+            
+            if (!locationId) {
+                showError('Invalid location ID');
+                return;
+            }
+            
+            initializeSocket();
+            loadLocationData();
+        });
+        
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                if (locationId) {
+                    socket.emit('join-location', locationId);
+                }
+            });
+            
+            socket.on('location-update', (data) => {
+                if (data.locationId === locationId) {
+                    updateLocationDisplay(data);
+                    document.getElementById('lastUpdate').textContent = 
+                        `Last updated: ${new Date(data.timestamp).toLocaleTimeString()}`;
+                }\n            });\n            \n            socket.on('location-stopped', (data) => {\n                if (data.locationId === locationId) {\n                    document.getElementById('liveUpdatesSection').style.display = 'none';\n                    document.getElementById('locationStatus').innerHTML = '<span>📍 Static Location</span>';\n                    showAlert('Live location sharing has stopped', 'info');\n                }\n            });\n        }\n        \n        async function loadLocationData() {\n            try {\n                const token = localStorage.getItem('token');\n                const headers = {};\n                \n                if (token) {\n                    headers['Authorization'] = `Bearer ${token}`;\n                }\n                \n                const response = await fetch(`/api/locations/${locationId}`, { headers });\n                \n                if (response.ok) {\n                    locationData = await response.json();\n                    displayLocationData();\n                } else if (response.status === 403) {\n                    showError('You do not have permission to view this location');\n                } else if (response.status === 404) {\n                    showError('Location not found or has been removed');\n                } else if (response.status === 410) {\n                    showError('This location sharing has expired');\n                } else {\n                    const error = await response.json();\n                    showError(error.message || 'Failed to load location');\n                }\n            } catch (error) {\n                showError('Network error. Please check your connection.');\n            }\n        }\n        \n        function displayLocationData() {\n            document.getElementById('loadingState').style.display = 'none';\n            document.getElementById('locationDetails').style.display = 'block';\n            \n            // User information\n            document.getElementById('userName').textContent = locationData.user.name;\n            document.getElementById('userPhone').textContent = locationData.user.phone || 'Not provided';\n            \n            // Location information\n            const address = locationData.address?.fullAddress || \n                           `${locationData.coordinates.latitude}, ${locationData.coordinates.longitude}`;\n            document.getElementById('locationAddress').textContent = address;\n            \n            document.getElementById('locationCoordinates').textContent = \n                `${locationData.coordinates.latitude.toFixed(6)}, ${locationData.coordinates.longitude.toFixed(6)}`;\n            \n            // Accuracy\n            const accuracy = locationData.accuracy || 0;\n            document.getElementById('accuracyText').textContent = `±${Math.round(accuracy)} meters`;\n            \n            const accuracyCircle = document.getElementById('accuracyCircle');\n            if (accuracy <= 10) {\n                accuracyCircle.className = 'accuracy-circle accuracy-high';\n            } else if (accuracy <= 50) {\n                accuracyCircle.className = 'accuracy-circle accuracy-medium';\n            } else {\n                accuracyCircle.className = 'accuracy-circle accuracy-low';\n            }\n            \n            // Additional information\n            if (locationData.locationName) {\n                document.getElementById('locationNameItem').style.display = 'block';\n                document.getElementById('locationName').textContent = locationData.locationName;\n            }\n            \n            if (locationData.instructions) {\n                document.getElementById('instructionsItem').style.display = 'block';\n                document.getElementById('locationInstructions').textContent = locationData.instructions;\n            }\n            \n            if (locationData.landmarks) {\n                document.getElementById('landmarksItem').style.display = 'block';\n                document.getElementById('locationLandmarks').textContent = locationData.landmarks;\n            }\n            \n            // Live location status\n            if (locationData.isLiveSharing) {\n                document.getElementById('liveUpdatesSection').style.display = 'block';\n                document.getElementById('locationStatus').innerHTML = `\n                    <div class=\"pulse\"></div>\n                    <span>Live Location Active</span>\n                `;\n                \n                const lastUpdate = new Date(locationData.updatedAt).toLocaleTimeString();\n                document.getElementById('lastUpdate').textContent = `Last updated: ${lastUpdate}`;\n            } else {\n                document.getElementById('locationStatus').innerHTML = '<span>📍 Static Location</span>';\n            }\n            \n            // Navigation links\n            const lat = locationData.coordinates.latitude;\n            const lng = locationData.coordinates.longitude;\n            \n            document.getElementById('googleMapsLink').href = \n                `https://www.google.com/maps?q=${lat},${lng}`;\n            document.getElementById('appleMapsLink').href = \n                `https://maps.apple.com/?q=${lat},${lng}`;\n        }\n        \n        function updateLocationDisplay(data) {\n            // Update coordinates\n            document.getElementById('locationCoordinates').textContent = \n                `${data.coordinates.latitude.toFixed(6)}, ${data.coordinates.longitude.toFixed(6)}`;\n            \n            // Update accuracy if provided\n            if (data.accuracy) {\n                document.getElementById('accuracyText').textContent = `±${Math.round(data.accuracy)} meters`;\n            }\n            \n            // Update navigation links\n            const lat = data.coordinates.latitude;\n            const lng = data.coordinates.longitude;\n            \n            document.getElementById('googleMapsLink').href = \n                `https://www.google.com/maps?q=${lat},${lng}`;\n            document.getElementById('appleMapsLink').href = \n                `https://maps.apple.com/?q=${lat},${lng}`;\n        }\n        \n        function getDirections() {\n            if (!locationData) return;\n            \n            if (navigator.geolocation) {\n                navigator.geolocation.getCurrentPosition(\n                    (position) => {\n                        const currentLat = position.coords.latitude;\n                        const currentLng = position.coords.longitude;\n                        const destLat = locationData.coordinates.latitude;\n                        const destLng = locationData.coordinates.longitude;\n                        \n                        const url = `https://www.google.com/maps/dir/${currentLat},${currentLng}/${destLat},${destLng}`;\n                        window.open(url, '_blank');\n                    },\n                    (error) => {\n                        // Fallback to destination only\n                        const lat = locationData.coordinates.latitude;\n                        const lng = locationData.coordinates.longitude;\n                        const url = `https://www.google.com/maps?q=${lat},${lng}`;\n                        window.open(url, '_blank');\n                    }\n                );\n            } else {\n                // Fallback to destination only\n                const lat = locationData.coordinates.latitude;\n                const lng = locationData.coordinates.longitude;\n                const url = `https://www.google.com/maps?q=${lat},${lng}`;\n                window.open(url, '_blank');\n            }\n        }\n        \n        function showError(message) {\n            document.getElementById('loadingState').style.display = 'none';\n            document.getElementById('errorState').style.display = 'block';\n            document.getElementById('errorMessage').textContent = message;\n            document.getElementById('locationStatus').innerHTML = '<span>❌ Error</span>';\n        }\n        \n        function showAlert(message, type) {\n            // You could implement a toast notification system here\n            console.log(`${type.toUpperCase()}: ${message}`);\n        }\n        \n        // Cleanup on page unload\n        window.addEventListener('beforeunload', function() {\n            if (socket && locationId) {\n                socket.emit('leave-location', locationId);\n            }\n        });\n    </script>\n</body>\n</html>"}

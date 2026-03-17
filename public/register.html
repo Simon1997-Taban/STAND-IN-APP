@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stand-In App - Register</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        select[multiple] {
+            height: 120px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            color: #666;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e1e5e9;
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 15px;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .success {
+            background: #efe;
+            color: #363;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .service-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .service-tag {
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        
+        .service-tag.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo">
+            <h1>Join Stand-In</h1>
+            <p>Connect. Serve. Succeed.</p>
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        <div id="successMessage" class="success" style="display: none;"></div>
+        
+        <form id="registerForm">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <div class="section-title">Basic Information</div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" required minlength="6">
+                    <div class="help-text">Minimum 6 characters</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" placeholder="City, State">
+                </div>
+            </div>
+            
+            <!-- Account Type -->
+            <div class="form-section">
+                <div class="section-title">Account Type</div>
+                
+                <div class="form-group">
+                    <label for="role">I want to: *</label>
+                    <select id="role" required>
+                        <option value="">Select your primary goal...</option>
+                        <option value="client">Request Services (I need help)</option>
+                        <option value="provider">Provide Services (I want to help others)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Provider Specific Fields -->
+            <div id="providerFields" class="form-section hidden">
+                <div class="section-title">Service Provider Details</div>
+                
+                <div class="form-group">
+                    <label>Services I Can Provide: *</label>
+                    <div class="help-text">Select all services you're comfortable providing</div>
+                    <div class="service-tags">
+                        <div class="service-tag" data-service="tutoring">📚 Tutoring/Teaching</div>
+                        <div class="service-tag" data-service="companionship">👥 Companionship</div>
+                        <div class="service-tag" data-service="counseling">💬 Counseling/Listening</div>
+                        <div class="service-tag" data-service="fitness">💪 Fitness Partner</div>
+                        <div class="service-tag" data-service="cooking">👨‍🍳 Cooking Partner</div>
+                        <div class="service-tag" data-service="walking">🚶‍♂️ Walking Partner</div>
+                        <div class="service-tag" data-service="dancing">💃 Dancing Partner</div>
+                        <div class="service-tag" data-service="conversation">🗣️ Conversation Partner</div>
+                        <div class="service-tag" data-service="shopping">🛍️ Shopping Companion</div>
+                        <div class="service-tag" data-service="events">🎉 Event Companion</div>
+                    </div>
+                    <input type="hidden" id="selectedServices">
+                </div>
+                
+                <div class="form-group">
+                    <label for="hourlyRate">Hourly Rate (USD) *</label>
+                    <input type="number" id="hourlyRate" min="5" max="500" step="5">
+                    <div class="help-text">Set your hourly rate between $5 - $500</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bio">About Me</label>
+                    <textarea id="bio" rows="4" placeholder="Tell potential clients about your experience, skills, and what makes you a great service provider..."></textarea>
+                    <div class="help-text">This will help clients choose you</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="onlineServices">
+                        <label for="onlineServices">I can provide online/virtual services</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Terms and Conditions -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms">I agree to the Terms of Service and Privacy Policy *</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="setupPaymentLater">
+                    <label for="setupPaymentLater">I'll set up payment methods later</label>
+                </div>
+                <div class="help-text">You can add payment methods after registration in your dashboard</div>
+            </div>
+            
+            <button type="submit" class="btn" id="registerBtn">
+                <span id="btnText">Create Account</span>
+                <span id="btnLoading" class="loading" style="display: none;"></span>
+            </button>
+        </form>
+        
+        <div class="divider">
+            <span>or</span>
+        </div>
+        
+        <div class="login-link">
+            <p>Already have an account? <a href="login.html">Sign in here</a></p>
+        </div>
+    </div>
+    
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const registerBtn = document.getElementById('registerBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoading = document.getElementById('btnLoading');
+        
+        let selectedServices = new Set();
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+        
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+        
+        function setLoading(loading) {
+            registerBtn.disabled = loading;
+            btnText.style.display = loading ? 'none' : 'inline';
+            btnLoading.style.display = loading ? 'inline-block' : 'none';
+        }
+        
+        // Handle role selection
+        document.getElementById('role').addEventListener('change', function() {
+            const providerFields = document.getElementById('providerFields');
+            if (this.value === 'provider') {
+                providerFields.classList.remove('hidden');
+            } else {
+                providerFields.classList.add('hidden');
+                selectedServices.clear();
+                updateSelectedServices();
+            }
+        });
+        
+        // Handle service tag selection
+        document.querySelectorAll('.service-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                const service = this.dataset.service;
+                
+                if (selectedServices.has(service)) {
+                    selectedServices.delete(service);
+                    this.classList.remove('selected');
+                } else {
+                    selectedServices.add(service);
+                    this.classList.add('selected');
+                }
+                
+                updateSelectedServices();
+            });
+        });
+        
+        function updateSelectedServices() {
+            document.getElementById('selectedServices').value = Array.from(selectedServices).join(',');
+        }
+        
+        // Form submission
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideMessages();
+            setLoading(true);
+            
+            const role = document.getElementById('role').value;
+            
+            // Validate provider fields
+            if (role === 'provider') {
+                if (selectedServices.size === 0) {
+                    showError('Please select at least one service you can provide.');
+                    setLoading(false);
+                    return;
+                }
+                
+                const hourlyRate = document.getElementById('hourlyRate').value;
+                if (!hourlyRate || hourlyRate < 5) {
+                    showError('Please set a valid hourly rate (minimum $5).');
+                    setLoading(false);
+                    return;
+                }
+            }
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                phone: document.getElementById('phone').value,
+                location: document.getElementById('location').value,
+                role: role
+            };
+            
+            if (role === 'provider') {
+                formData.services = Array.from(selectedServices);
+                formData.hourlyRate = parseFloat(document.getElementById('hourlyRate').value);
+                formData.bio = document.getElementById('bio').value;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Account created successfully! Redirecting to dashboard...');
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    
+                    setTimeout(() => {
+                        if (result.user.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else {
+                            // Check if user wants to setup payment later
+                            const setupLater = document.getElementById('setupPaymentLater').checked;
+                            if (setupLater) {
+                                window.location.href = 'dashboard.html';
+                            } else {
+                                window.location.href = 'payment-setup.html';
+                            }
+                        }
+                    }, 2000);
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        // Check if already logged in
+        if (localStorage.getItem('token')) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+    </script>
+</body>
+</html>
