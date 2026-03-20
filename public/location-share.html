@@ -294,6 +294,121 @@
         .hidden {
             display: none;
         }
+
+        :root {
+            --bg: #07111f;
+            --bg-soft: #101a2d;
+            --surface: rgba(16, 27, 44, 0.94);
+            --surface-soft: rgba(23, 38, 61, 0.92);
+            --line: rgba(139, 173, 219, 0.14);
+            --text: #ecf7ff;
+            --muted: #9ab0cb;
+            --cyan: #43e4de;
+            --pink: #ff5b8b;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 15% 20%, rgba(67, 228, 222, 0.13), transparent 22%),
+                radial-gradient(circle at 82% 12%, rgba(255, 91, 139, 0.12), transparent 24%),
+                linear-gradient(180deg, var(--bg), var(--bg-soft));
+            color: var(--text);
+        }
+
+        .header {
+            background: rgba(5, 11, 22, 0.82);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: none;
+            backdrop-filter: blur(18px);
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px;
+        }
+
+        .location-section {
+            background: linear-gradient(180deg, var(--surface), rgba(11, 20, 33, 0.94));
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 28px 70px rgba(2, 8, 20, 0.34);
+        }
+
+        .section-title,
+        .location-details h4,
+        label {
+            color: var(--text);
+        }
+
+        .location-option,
+        .current-location,
+        .live-sharing,
+        .location-card,
+        .alert {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.08);
+            color: var(--text);
+        }
+
+        .location-option:hover,
+        .location-option.selected {
+            border-color: rgba(67, 228, 222, 0.38);
+            background: rgba(67, 228, 222, 0.1);
+            color: var(--text);
+        }
+
+        input, textarea, select {
+            background: rgba(3, 10, 18, 0.5);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 4px rgba(67, 228, 222, 0.12);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--cyan), #6cf0c7);
+            color: #07111f;
+            border-radius: 999px;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff92b0, #ff6588);
+            color: #07111f;
+        }
+
+        .coordinates,
+        .accuracy,
+        .option-description,
+        .location-meta,
+        .alert-info,
+        .alert-success,
+        .alert-error {
+            color: var(--muted);
+        }
+
+        .alert-info {
+            background: rgba(67, 228, 222, 0.08);
+            border-color: rgba(67, 228, 222, 0.22);
+        }
+
+        .alert-success {
+            background: rgba(105, 241, 197, 0.08);
+            border-color: rgba(105, 241, 197, 0.22);
+        }
+
+        .alert-error {
+            background: rgba(255, 91, 139, 0.08);
+            border-color: rgba(255, 91, 139, 0.22);
+        }
     </style>
 </head>
 <body>

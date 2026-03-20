@@ -61,6 +61,7 @@ router.post('/share', auth, async (req, res) => {
       serviceRequest: serviceRequestId,
       type,
       coordinates: { latitude, longitude },
+      geoLocation: { type: 'Point', coordinates: [longitude, latitude] },
       accuracy,
       altitude,
       heading,
@@ -108,6 +109,7 @@ router.put('/live/:id', auth, async (req, res) => {
 
     // Update coordinates and metadata
     location.coordinates = { latitude, longitude };
+    location.geoLocation = { type: 'Point', coordinates: [longitude, latitude] };
     if (accuracy !== undefined) location.accuracy = accuracy;
     if (altitude !== undefined) location.altitude = altitude;
     if (heading !== undefined) location.heading = heading;
@@ -133,7 +135,7 @@ router.put('/live/:id', auth, async (req, res) => {
   }
 });
 
-// Get shared location
+// Get shared location by ID ← keep AFTER specific routes
 router.get('/:id', async (req, res) => {
   try {
     const location = await Location.findById(req.params.id)
@@ -165,7 +167,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Get user's shared locations
+// Get user's shared locations  ← must be BEFORE /:id
 router.get('/user/my-locations', auth, async (req, res) => {
   try {
     const locations = await Location.find({
@@ -181,7 +183,7 @@ router.get('/user/my-locations', auth, async (req, res) => {
   }
 });
 
-// Get locations shared with user (for providers)
+// Get locations shared with user ← must be BEFORE /:id
 router.get('/shared/with-me', auth, async (req, res) => {
   try {
     const locations = await Location.find({
@@ -274,8 +276,9 @@ router.post('/nearby-providers', auth, async (req, res) => {
             coordinates: [longitude, latitude]
           },
           distanceField: 'distance',
-          maxDistance: radius * 1000, // Convert km to meters
-          spherical: true
+          maxDistance: radius * 1000,
+          spherical: true,
+          key: 'geoLocation'
         }
       },
       {

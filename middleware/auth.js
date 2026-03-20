@@ -10,6 +10,7 @@ const auth = (req, res, next) => {
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
     req.user = decoded;
+    req.user.userId = decoded.userId || decoded.id || String(decoded._id);
     next();
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' });

@@ -5,239 +5,574 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stand-In App - Login</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        :root {
+            --bg-1: #07111f;
+            --bg-2: #101a2d;
+            --panel: rgba(16, 24, 39, 0.92);
+            --panel-soft: rgba(24, 34, 54, 0.9);
+            --line: rgba(120, 147, 187, 0.18);
+            --text: #ecf7ff;
+            --muted: #98abc6;
+            --cyan: #41e4de;
+            --pink: #ff4f88;
+            --cyan-soft: rgba(65, 228, 222, 0.28);
+            --pink-soft: rgba(255, 79, 136, 0.22);
+            --success: #54f1bf;
+            --danger: #ff8aa8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            color-scheme: dark;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(65, 228, 222, 0.12), transparent 28%),
+                radial-gradient(circle at 80% 15%, rgba(255, 79, 136, 0.12), transparent 24%),
+                radial-gradient(circle at 70% 80%, rgba(246, 193, 119, 0.08), transparent 30%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+            color: var(--text);
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
         }
-        
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: auto;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            filter: blur(72px);
+            opacity: 0.38;
+            pointer-events: none;
         }
-        
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
+
+        body::before {
+            top: -80px;
+            left: -60px;
+            background: var(--cyan-soft);
         }
-        
-        .logo h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 5px;
+
+        body::after {
+            right: -120px;
+            bottom: -80px;
+            background: var(--pink-soft);
         }
-        
-        .logo p {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .divider {
-            text-align: center;
-            margin: 25px 0;
-            color: #666;
+
+        .auth-shell {
             position: relative;
+            width: min(100%, 1080px);
+            min-height: 620px;
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(320px, 390px);
+            align-items: center;
+            gap: 36px;
+            padding: 32px;
+            border-radius: 34px;
+            background: rgba(7, 17, 31, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow:
+                0 30px 80px rgba(2, 7, 18, 0.58),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(18px);
         }
-        
-        .divider::before {
-            content: '';
+
+        .auth-shell::before,
+        .auth-shell::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            pointer-events: none;
+        }
+
+        .auth-shell::before {
+            top: 18px;
+            left: 18px;
+            border-top: 2px solid var(--cyan);
+            border-left: 2px solid var(--cyan);
+            border-radius: 20px 0 0 0;
+            filter: drop-shadow(0 0 12px rgba(65, 228, 222, 0.4));
+        }
+
+        .auth-shell::after {
+            bottom: 18px;
+            right: 18px;
+            border-bottom: 2px solid var(--pink);
+            border-right: 2px solid var(--pink);
+            border-radius: 0 0 20px 0;
+            filter: drop-shadow(0 0 12px rgba(255, 79, 136, 0.4));
+        }
+
+        .stage-copy {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 420px;
+            z-index: 2;
+        }
+
+        .stage-copy span {
+            font-size: 12px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .stage-copy h1 {
+            font-size: clamp(24px, 4vw, 30px);
+            line-height: 1.08;
+        }
+
+        .stage-copy p {
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 15px;
+            max-width: 34ch;
+        }
+
+        .portal-card {
+            position: relative;
+            width: min(100%, 400px);
+            min-height: 520px;
+            justify-self: end;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(22, 30, 48, 0.98), rgba(14, 20, 34, 0.99));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow:
+                0 24px 50px rgba(3, 9, 20, 0.65),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            display: none;
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px 36px;
+            transition:
+                opacity 0.38s ease,
+                transform 0.48s cubic-bezier(0.2, 0.8, 0.2, 1),
+                visibility 0.38s ease;
+        }
+
+        .face-closed {
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+            z-index: 2;
+        }
+
+        .face-open {
+            justify-content: flex-start;
+            gap: 18px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(18px) scale(0.96);
+            z-index: 1;
+        }
+
+        .auth-shell.is-open .face-closed {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-20px) scale(0.92);
+        }
+
+        .auth-shell.is-open .face-open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .access-label {
+            font-size: 12px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .launch-button {
+            position: relative;
+            width: 100%;
+            border: 0;
+            border-radius: 18px;
+            padding: 18px 24px;
+            background: linear-gradient(180deg, rgba(34, 33, 49, 0.96), rgba(19, 20, 31, 0.98));
+            color: var(--text);
+            letter-spacing: 0.32em;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.3),
+                0 16px 30px rgba(0, 0, 0, 0.36);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .launch-button::before,
+        .launch-button::after {
+            content: "";
             position: absolute;
             top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e1e5e9;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transform: translateY(-50%);
         }
-        
-        .divider span {
-            background: white;
-            padding: 0 15px;
+
+        .launch-button::before {
+            left: 18px;
+            background: var(--pink);
+            box-shadow: 0 0 16px rgba(255, 79, 136, 0.86);
         }
-        
-        .register-link {
+
+        .launch-button::after {
+            right: 18px;
+            background: var(--pink);
+            box-shadow: 0 0 16px rgba(255, 79, 136, 0.86);
+        }
+
+        .launch-button:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.3),
+                0 22px 36px rgba(0, 0, 0, 0.42);
+        }
+
+        .tap-hint {
+            font-size: 13px;
+            color: var(--muted);
+            max-width: 220px;
+            line-height: 1.5;
+        }
+
+        .back-link {
+            align-self: flex-start;
+            padding: 0;
+            border: 0;
+            background: none;
+            color: var(--muted);
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             text-align: center;
-            margin-top: 20px;
         }
-        
-        .register-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
+
+        .brand-copy h2 {
+            font-size: 22px;
+            letter-spacing: 0.34em;
+            text-transform: uppercase;
+            color: var(--text);
         }
-        
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-        
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
+
+        .brand-copy p {
+            color: var(--muted);
+            line-height: 1.5;
             font-size: 14px;
         }
-        
+
+        .error {
+            display: none;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 138, 168, 0.35);
+            background: rgba(255, 79, 136, 0.1);
+            color: var(--danger);
+            font-size: 14px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .field {
+            position: relative;
+        }
+
+        .field input {
+            width: 100%;
+            border: 1px solid rgba(228, 239, 255, 0.2);
+            background: rgba(7, 11, 19, 0.6);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 15px 18px;
+            font-size: 15px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .field input::placeholder {
+            color: rgba(152, 171, 198, 0.82);
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: rgba(65, 228, 222, 0.72);
+            box-shadow: 0 0 0 4px rgba(65, 228, 222, 0.14);
+            transform: translateY(-1px);
+        }
+
+        .submit-button {
+            border: 0;
+            border-radius: 999px;
+            padding: 15px 20px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #06131d;
+            background: linear-gradient(135deg, #41e4de, #69f1c5);
+            cursor: pointer;
+            box-shadow: 0 16px 32px rgba(65, 228, 222, 0.28);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 34px rgba(65, 228, 222, 0.34);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+            transform: none;
+            box-shadow: 0 12px 18px rgba(65, 228, 222, 0.2);
+        }
+
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--muted);
+            padding-top: 8px;
+        }
+
+        .footer-row a {
+            color: var(--pink);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .footer-row a:hover {
+            text-decoration: underline;
+        }
+
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #ffffff;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
+            border: 2px solid rgba(6, 19, 29, 0.24);
+            border-top-color: #06131d;
+            animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .auth-shell {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                gap: 20px;
+            }
+
+            .stage-copy {
+                text-align: center;
+                align-items: center;
+                max-width: 520px;
+            }
+
+            .portal-card {
+                justify-self: center;
+            }
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 16px;
+            }
+
+            .auth-shell {
+                min-height: 560px;
+                padding: 22px;
+            }
+
+            .stage-copy {
+                width: 100%;
+            }
+
+            .portal-card {
+                min-height: 500px;
+            }
+
+            .card-face {
+                padding: 40px 26px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">
-            <h1>Stand-In</h1>
-            <p>Connect. Serve. Succeed.</p>
+    <main class="auth-shell" id="authShell">
+        <div class="stage-copy">
+            <span>Stand-In</span>
+            <h1>Elegant access for your service marketplace.</h1>
+            <p>Enter through the animated login card, then move straight into the polished Stand-In workspace for clients, providers, and admins.</p>
         </div>
-        
-        <div id="errorMessage" class="error" style="display: none;"></div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" required>
+
+        <section class="portal-card">
+            <div class="card-face face-closed">
+                <p class="access-label">Secure Access</p>
+                <button type="button" class="launch-button" id="launchLogin">LOGIN</button>
+                <p class="tap-hint">Your credentials are encrypted and never shared. Tap to sign in securely.</p>
             </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required>
+
+            <div class="card-face face-open">
+                <button type="button" class="back-link" id="closeLogin">Close</button>
+
+                <div class="brand-copy">
+                    <h2>WELCOME BACK</h2>
+                    <p>Sign in to access your dashboard, manage bookings, and stay connected with your clients or providers.</p>
+                </div>
+
+                <div id="errorMessage" class="error"></div>
+
+                <form id="loginForm" class="login-form">
+                    <div class="field">
+                        <input type="email" id="email" placeholder="Email address" autocomplete="email" required>
+                    </div>
+
+                    <div class="field">
+                        <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
+                    </div>
+
+                    <button type="submit" class="submit-button" id="loginBtn">
+                        <span id="btnText">Sign In</span>
+                        <span id="btnLoading" class="loading" style="display: none;"></span>
+                    </button>
+                </form>
+
+                <div class="footer-row">
+                    <span>New here?</span>
+                    <a href="register.html">Create account</a>
+                </div>
             </div>
-            
-            <button type="submit" class="btn" id="loginBtn">
-                <span id="btnText">Sign In</span>
-                <span id="btnLoading" class="loading" style="display: none;"></span>
-            </button>
-        </form>
-        
-        <div class="divider">
-            <span>or</span>
-        </div>
-        
-        <div class="register-link">
-            <p>Don't have an account? <a href="register.html">Create one here</a></p>
-        </div>
-    </div>
-    
+        </section>
+    </main>
+
     <script>
+        const authShell = document.getElementById('authShell');
+        const launchLogin = document.getElementById('launchLogin');
+        const closeLogin = document.getElementById('closeLogin');
         const loginForm = document.getElementById('loginForm');
         const errorMessage = document.getElementById('errorMessage');
         const loginBtn = document.getElementById('loginBtn');
         const btnText = document.getElementById('btnText');
         const btnLoading = document.getElementById('btnLoading');
-        
+        const emailInput = document.getElementById('email');
+
+        function redirectToDashboard() {
+            const storedUser = localStorage.getItem('user');
+
+            if (!storedUser) {
+                return;
+            }
+
+            try {
+                const user = JSON.parse(storedUser);
+                window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
+            } catch (error) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        }
+
+        function openLoginCard() {
+            authShell.classList.add('is-open');
+            window.setTimeout(() => emailInput.focus(), 220);
+        }
+
+        function closeLoginCard() {
+            authShell.classList.remove('is-open');
+            hideError();
+        }
+
         function showError(message) {
+            openLoginCard();
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
         }
-        
+
         function hideError() {
             errorMessage.style.display = 'none';
         }
-        
+
         function setLoading(loading) {
             loginBtn.disabled = loading;
             btnText.style.display = loading ? 'none' : 'inline';
             btnLoading.style.display = loading ? 'inline-block' : 'none';
         }
-        
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+
+        launchLogin.addEventListener('click', openLoginCard);
+        closeLogin.addEventListener('click', closeLoginCard);
+
+        loginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
             hideError();
             setLoading(true);
-            
+
             const formData = {
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value
             };
-            
+
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('user', JSON.stringify(result.user));
-                    
-                    // Redirect based on role
-                    if (result.user.role === 'admin') {
-                        window.location.href = 'admin-dashboard.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
-                    }
+                    redirectToDashboard();
                 } else {
-                    showError(result.message);
+                    showError(result.message || 'Unable to sign in right now.');
                 }
             } catch (error) {
                 showError('Network error. Please try again.');
@@ -245,15 +580,9 @@
                 setLoading(false);
             }
         });
-        
-        // Check if already logged in
+
         if (localStorage.getItem('token')) {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (user.role === 'admin') {
-                window.location.href = 'admin-dashboard.html';
-            } else {
-                window.location.href = 'dashboard.html';
-            }
+            redirectToDashboard();
         }
     </script>
 </body>

@@ -3,13 +3,34 @@ const { PaymentMethod, Transaction } = require('../models/Payment');
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  convertFromUsd,
+  getExchangeRate,
+  isSupportedCurrency,
+  normalizeCurrency,
+  roundMoney
+} = require('../utils/currency');
 const router = express.Router();
+
+router.get('/currencies', auth, async (req, res) => {
+  res.json(SUPPORTED_CURRENCIES);
+});
 
 // Add payment method
 router.post('/methods', auth, async (req, res) => {
   try {
     const { type, bankName, accountNumber, accountName, routingNumber, swiftCode, 
-            mobileProvider, mobileNumber, mobileAccountName, walletEmail, walletId } = req.body;
+            mobileProvider, mobileNumber, mobileAccountName, walletEmail, walletId, currency, cashLabel } = req.body;
+
+    const selectedCurrency = isSupportedCurrency(currency)
+      ? normalizeCurrency(currency)
+      : DEFAULT_CURRENCY;
+
+    if (type === 'cash' && !isSupportedCurrency(selectedCurrency)) {
+      return res.status(400).json({ message: 'Select a valid cash payment currency' });
+    }
     
     // If this is the first payment method, make it default
     const existingMethods = await PaymentMethod.countDocuments({ user: req.user.userId });
@@ -36,6 +57,8 @@ router.post('/methods', auth, async (req, res) => {
       mobileAccountName,
       walletEmail,
       walletId,
+      currency: selectedCurrency,
+      cashLabel,
       isDefault: req.body.isDefault || isDefault
     });
     
@@ -79,8 +102,17 @@ router.put('/methods/:id', auth, async (req, res) => {
         { isDefault: false }
       );
     }
+
+    if (req.body.currency && !isSupportedCurrency(req.body.currency)) {
+      return res.status(400).json({ message: 'Invalid currency selection' });
+    }
     
     Object.assign(paymentMethod, req.body);
+
+    if (req.body.currency) {
+      paymentMethod.currency = normalizeCurrency(req.body.currency);
+    }
+
     await paymentMethod.save();
     
     res.json(paymentMethod);
@@ -113,7 +145,7 @@ router.delete('/methods/:id', auth, async (req, res) => {
 // Process payment for service request
 router.post('/process/:requestId', auth, async (req, res) => {
   try {
-    const { clientPaymentMethodId } = req.body;
+    const { clientPaymentMethodId, paymentCurrency } = req.body;
     
     const serviceRequest = await ServiceRequest.findById(req.params.requestId)
       .populate('client provider');
@@ -132,6 +164,10 @@ router.post('/process/:requestId', auth, async (req, res) => {
       return res.status(400).json({ message: 'Service request must be accepted before payment' });
     }
     
+    // Check if already paid or processing
+    if (['processing', 'paid'].includes(serviceRequest.paymentStatus))
+      return res.status(400).json({ message: 'Payment already initiated for this request' });
+
     // Get client payment method
     const clientPaymentMethod = await PaymentMethod.findOne({
       _id: clientPaymentMethodId,
@@ -154,16 +190,28 @@ router.post('/process/:requestId', auth, async (req, res) => {
       return res.status(400).json({ message: 'Provider has not set up payment method' });
     }
     
-    // Calculate amounts (15% commission)
-    const totalAmount = serviceRequest.totalAmount;
-    const adminCommission = totalAmount * 0.15;
-    const providerAmount = totalAmount - adminCommission;
+    const baseTotalAmount = roundMoney(serviceRequest.baseTotalAmount || serviceRequest.totalAmount || 0);
+    const baseAdminCommission = roundMoney(serviceRequest.baseAdminCommission || serviceRequest.adminCommission || (baseTotalAmount * 0.15));
+    const baseProviderAmount = roundMoney(baseTotalAmount - baseAdminCommission);
+    const selectedCurrency = isSupportedCurrency(paymentCurrency)
+      ? normalizeCurrency(paymentCurrency)
+      : normalizeCurrency(serviceRequest.paymentCurrency || clientPaymentMethod.currency || DEFAULT_CURRENCY);
+    const exchangeRate = getExchangeRate(selectedCurrency);
+    const totalAmount = convertFromUsd(baseTotalAmount, selectedCurrency);
+    const adminCommission = convertFromUsd(baseAdminCommission, selectedCurrency);
+    const providerAmount = convertFromUsd(baseProviderAmount, selectedCurrency);
     
     // Create transaction
     const transaction = new Transaction({
       serviceRequest: serviceRequest._id,
       client: serviceRequest.client._id,
       provider: serviceRequest.provider._id,
+      baseCurrency: DEFAULT_CURRENCY,
+      currency: selectedCurrency,
+      exchangeRate,
+      baseTotalAmount,
+      baseProviderAmount,
+      baseAdminCommission,
       totalAmount,
       providerAmount,
       adminCommission,
@@ -176,6 +224,13 @@ router.post('/process/:requestId', auth, async (req, res) => {
     await transaction.save();
     
     // Update service request
+    serviceRequest.baseCurrency = DEFAULT_CURRENCY;
+    serviceRequest.paymentCurrency = selectedCurrency;
+    serviceRequest.exchangeRate = exchangeRate;
+    serviceRequest.baseTotalAmount = baseTotalAmount;
+    serviceRequest.baseAdminCommission = baseAdminCommission;
+    serviceRequest.totalAmount = totalAmount;
+    serviceRequest.adminCommission = adminCommission;
     serviceRequest.paymentStatus = 'processing';
     serviceRequest.status = 'in-progress';
     await serviceRequest.save();
@@ -184,6 +239,8 @@ router.post('/process/:requestId', auth, async (req, res) => {
       message: 'Payment initiated successfully',
       transaction: transaction,
       breakdown: {
+        currency: selectedCurrency,
+        exchangeRate,
         totalAmount,
         providerAmount,
         adminCommission,
@@ -250,9 +307,9 @@ router.put('/transactions/:id/status', auth, async (req, res) => {
         status: 'completed'
       });
     } else if (status === 'failed') {
-      // Update service request
       await ServiceRequest.findByIdAndUpdate(transaction.serviceRequest, {
-        paymentStatus: 'failed'
+        paymentStatus: 'failed',
+        status: 'accepted' // revert back so client can retry
       });
     }
     

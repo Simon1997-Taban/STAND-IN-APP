@@ -1,5 +1,32 @@
 const mongoose = require('mongoose');
 
+const chatMessageSchema = new mongoose.Schema({
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userName: { type: String, required: true },
+  userRole: { type: String, enum: ['client', 'provider', 'admin'], required: true },
+  userImage: { type: String },
+  message: { type: String, required: true, trim: true, maxlength: 1500 },
+  timestamp: { type: Date, default: Date.now }
+}, { _id: true });
+
+const eventPostSchema = new mongoose.Schema({
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  authorName: { type: String, required: true },
+  authorRole: { type: String, enum: ['client', 'provider', 'admin'], required: true },
+  authorImage: { type: String },
+  caption: { type: String, trim: true, maxlength: 800 },
+  photos: {
+    type: [{ type: String }],
+    validate: {
+      validator: function (photos) {
+        return !photos || photos.length <= 6;
+      },
+      message: 'A maximum of 6 event photos is allowed per post'
+    }
+  },
+  createdAt: { type: Date, default: Date.now }
+}, { _id: true });
+
 const serviceRequestSchema = new mongoose.Schema({
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   provider: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -14,6 +41,12 @@ const serviceRequestSchema = new mongoose.Schema({
   isOnline: { type: Boolean, default: false },
   
   // Pricing
+  baseCurrency: { type: String, default: 'USD' },
+  paymentCurrency: { type: String, default: 'USD' },
+  exchangeRate: { type: Number, default: 1 },
+  baseAgreedRate: { type: Number },
+  baseTotalAmount: { type: Number },
+  baseAdminCommission: { type: Number },
   agreedRate: { type: Number },
   totalAmount: { type: Number },
   adminCommission: { type: Number },
@@ -27,11 +60,16 @@ const serviceRequestSchema = new mongoose.Schema({
   
   // Communication
   chatRoom: { type: String }, // Socket.IO room ID
+  chatMessages: [chatMessageSchema],
   
+  // Zoom link for online services
+  zoomLink: { type: String },
+  clientLocation: { type: String },
+
   // Payment
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'refunded'],
+    enum: ['pending', 'processing', 'paid', 'failed', 'refunded'],
     default: 'pending'
   },
   paymentId: { type: String },
@@ -44,7 +82,10 @@ const serviceRequestSchema = new mongoose.Schema({
   providerReview: {
     rating: { type: Number, min: 1, max: 5 },
     comment: { type: String }
-  }
+  },
+
+  // Shared media timeline
+  eventPosts: [eventPostSchema]
 }, {
   timestamps: true
 });

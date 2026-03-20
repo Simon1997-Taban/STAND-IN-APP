@@ -1,11 +1,19 @@
 const mongoose = require('mongoose');
+const { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } = require('../utils/currency');
+
+const supportedCurrencyCodes = SUPPORTED_CURRENCIES.map((currency) => currency.code);
 
 const paymentMethodSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   type: { 
     type: String, 
-    enum: ['bank_account', 'mobile_money', 'paypal', 'stripe'], 
+    enum: ['bank_account', 'mobile_money', 'paypal', 'stripe', 'cash'], 
     required: true 
+  },
+  currency: {
+    type: String,
+    enum: supportedCurrencyCodes,
+    default: DEFAULT_CURRENCY
   },
   
   // Bank Account Details
@@ -26,6 +34,9 @@ const paymentMethodSchema = new mongoose.Schema({
   // Digital Wallet Details
   walletEmail: { type: String },
   walletId: { type: String },
+
+  // Cash details
+  cashLabel: { type: String },
   
   isDefault: { type: Boolean, default: false },
   isVerified: { type: Boolean, default: false },
@@ -40,6 +51,16 @@ const transactionSchema = new mongoose.Schema({
   provider: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   
   // Payment Details
+  baseCurrency: { type: String, default: DEFAULT_CURRENCY },
+  currency: {
+    type: String,
+    enum: supportedCurrencyCodes,
+    default: DEFAULT_CURRENCY
+  },
+  exchangeRate: { type: Number, default: 1 },
+  baseTotalAmount: { type: Number, required: true },
+  baseProviderAmount: { type: Number, required: true },
+  baseAdminCommission: { type: Number, required: true },
   totalAmount: { type: Number, required: true },
   providerAmount: { type: Number, required: true }, // Amount after commission
   adminCommission: { type: Number, required: true }, // 15% commission

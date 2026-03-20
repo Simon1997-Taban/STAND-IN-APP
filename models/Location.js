@@ -16,6 +16,11 @@ const locationSchema = new mongoose.Schema({
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true }
   },
+  // GeoJSON for geospatial queries
+  geoLocation: {
+    type: { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number] } // [longitude, latitude]
+  },
   
   // Address Information
   address: {
@@ -58,7 +63,7 @@ const locationSchema = new mongoose.Schema({
 });
 
 // Index for geospatial queries
-locationSchema.index({ coordinates: '2dsphere' });
+locationSchema.index({ geoLocation: '2dsphere' });
 
 // Index for expiring documents
 locationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

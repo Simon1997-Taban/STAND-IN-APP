@@ -11,7 +11,8 @@ const io = socketIo(server);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(express.static('public'));
 
 // Routes
@@ -40,12 +41,18 @@ io.on('connection', (socket) => {
   });
   
   socket.on('send-message', (data) => {
-    socket.to(data.roomId).emit('receive-message', data);
+    // Broadcast to everyone in the room INCLUDING sender
+    io.to(data.roomId).emit('receive-message', data);
   });
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+
+  socket.on('user-typing', (data) => {
+    socket.to(data.roomId).emit('user-typing', data);
   });
+
+  socket.on('user-stopped-typing', (data) => {
+    socket.to(data.roomId).emit('user-stopped-typing', data);
+  });
+
 });
 
 // Make io available to routes
@@ -54,7 +61,18 @@ app.set('io', io);
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/standin-app')
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Internal server error' });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
 
 const PORT = process.env.PORT || 9000;
 server.listen(PORT, () => {
