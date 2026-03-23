@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#41e4de"/>
+      <stop offset="100%" stop-color="#69f1c5"/>
+    </linearGradient>
+    <linearGradient id="dotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff4f88"/>
+      <stop offset="100%" stop-color="#ff8aa8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: two people side by side (stand-in concept) -->
+  <!-- Person 1 (stepping back / original) -->
+  <circle cx="18" cy="14" r="6" fill="url(#iconGrad)" opacity="0.5"/>
+  <path d="M10 38 Q10 26 18 26 Q26 26 26 38" fill="url(#iconGrad)" opacity="0.5"/>
+
+  <!-- Person 2 (stand-in / stepping forward) -->
+  <circle cx="32" cy="12" r="7" fill="url(#iconGrad)"/>
+  <path d="M23 38 Q23 25 32 25 Q41 25 41 38" fill="url(#iconGrad)"/>
+
+  <!-- Arrow indicating swap/replace -->
+  <path d="M44 19 L50 19 M47 15 L51 19 L47 23" stroke="#ff4f88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Wordmark: STAND-IN -->
+  <text x="58" y="28" font-family="Trebuchet MS, Segoe UI, sans-serif" font-size="20" font-weight="700" letter-spacing="3" fill="#ecf7ff">STAND</text>
+  <text x="58" y="46" font-family="Trebuchet MS, Segoe UI, sans-serif" font-size="13" font-weight="400" letter-spacing="6" fill="url(#iconGrad)">IN</text>
+
+  <!-- Pink accent dot -->
+  <circle cx="155" cy="44" r="3" fill="url(#dotGrad)"/>
+</svg>
