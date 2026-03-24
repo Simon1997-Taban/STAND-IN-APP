@@ -130,7 +130,7 @@
         <section class="surface">
             <span class="pill">Payment Options</span>
             <h2>Set up how money moves through your account.</h2>
-            <p>Cash now supports UGX, KES, TZS, RWF, BIF, SSP, USD, and GBP so clients can settle service requests with the currency that fits the booking.</p>
+            <p>Your payment methods are linked to your account currency based on the country you registered from. All transactions use your local currency automatically.</p>
         </section>
 
         <div id="alertContainer"></div>
@@ -141,7 +141,7 @@
                 <button type="button" class="tab-btn active" data-tab="bank" onclick="showTab('bank')">Bank</button>
                 <button type="button" class="tab-btn" data-tab="mobile" onclick="showTab('mobile')">Mobile Money</button>
                 <button type="button" class="tab-btn" data-tab="digital" onclick="showTab('digital')">Wallet</button>
-                <button type="button" class="tab-btn" data-tab="cash" onclick="showTab('cash')">Cash</button>
+
             </div>
 
             <div class="tab-panel active" id="bank">
@@ -226,29 +226,7 @@
                 </form>
             </div>
 
-            <div class="tab-panel" id="cash">
-                <form id="cashForm">
-                    <div class="form-group">
-                        <label for="cashCurrency">Cash Currency</label>
-                        <select id="cashCurrency" required>
-                            <option value="UGX">UGX - Ugandan Shilling</option>
-                            <option value="KES">KES - Kenyan Shilling</option>
-                            <option value="TZS">TZS - Tanzanian Shilling</option>
-                            <option value="RWF">RWF - Rwandan Franc</option>
-                            <option value="BIF">BIF - Burundian Franc</option>
-                            <option value="SSP">SSP - South Sudanese Pound</option>
-                            <option value="USD" selected>USD - US Dollar</option>
-                            <option value="GBP">GBP - British Pound</option>
-                        </select>
-                        <div class="help-text">This cash method tells clients which currency can be used when paying for a request in person.</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="cashLabel">Cash Handover Label</label>
-                        <input type="text" id="cashLabel" placeholder="Example: Pay in person after service">
-                    </div>
-                    <button type="submit" class="btn"><span class="btn-text">Add Cash Method</span><span class="btn-loading loading" style="display: none;"></span></button>
-                </form>
-            </div>
+
         </section>
 
         <section class="surface">
@@ -289,7 +267,6 @@
             document.getElementById('bankForm').addEventListener('submit', handleBankSubmit);
             document.getElementById('mobileForm').addEventListener('submit', handleMobileSubmit);
             document.getElementById('digitalForm').addEventListener('submit', handleDigitalSubmit);
-            document.getElementById('cashForm').addEventListener('submit', handleCashSubmit);
         }
 
         async function handleBankSubmit(event) {
@@ -330,16 +307,6 @@
                 walletEmail: document.getElementById('walletEmail').value,
                 walletId: document.getElementById('walletId').value
             }, 'digitalForm');
-        }
-
-        async function handleCashSubmit(event) {
-            event.preventDefault();
-            setFormLoading('cashForm', true);
-            await submitPaymentMethod({
-                type: 'cash',
-                currency: document.getElementById('cashCurrency').value,
-                cashLabel: document.getElementById('cashLabel').value
-            }, 'cashForm');
         }
 
         async function submitPaymentMethod(formData, formId) {

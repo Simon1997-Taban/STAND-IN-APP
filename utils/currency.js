@@ -1,5 +1,19 @@
 const DEFAULT_CURRENCY = 'USD';
 
+// Maps country code (ISO 3166-1 alpha-2) → currency code
+const COUNTRY_CURRENCY_MAP = {
+  UG: 'UGX', KE: 'KES', TZ: 'TZS', RW: 'RWF', BI: 'BIF', SS: 'SSP',
+  GB: 'GBP', US: 'USD', CA: 'USD', AU: 'USD', NZ: 'USD',
+  NG: 'USD', GH: 'USD', ZA: 'USD', ET: 'USD', EG: 'USD',
+  IN: 'USD', PK: 'USD', BD: 'USD', PH: 'USD', ID: 'USD',
+  DE: 'GBP', FR: 'GBP', IT: 'GBP', ES: 'GBP', NL: 'GBP'
+};
+
+function getCurrencyForCountry(countryCode) {
+  if (!countryCode) return DEFAULT_CURRENCY;
+  return COUNTRY_CURRENCY_MAP[String(countryCode).toUpperCase()] || DEFAULT_CURRENCY;
+}
+
 const SUPPORTED_CURRENCIES = [
   { code: 'UGX', label: 'Ugandan Shilling', symbol: 'USh', rate: 3850 },
   { code: 'KES', label: 'Kenyan Shilling', symbol: 'KSh', rate: 129 },
@@ -40,6 +54,8 @@ function convertFromUsd(amountUsd, currencyCode) {
 module.exports = {
   DEFAULT_CURRENCY,
   SUPPORTED_CURRENCIES,
+  COUNTRY_CURRENCY_MAP,
+  getCurrencyForCountry,
   normalizeCurrency,
   getCurrencyInfo,
   getExchangeRate,

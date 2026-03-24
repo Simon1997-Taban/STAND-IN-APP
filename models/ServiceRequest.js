@@ -90,4 +90,10 @@ const serviceRequestSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Indexes for high-traffic queries
+serviceRequestSchema.index({ client: 1, createdAt: -1 });
+serviceRequestSchema.index({ provider: 1, createdAt: -1 });
+serviceRequestSchema.index({ status: 1 });
+serviceRequestSchema.index({ chatRoom: 1 });
+
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);

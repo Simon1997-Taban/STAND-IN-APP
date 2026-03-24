@@ -15,52 +15,64 @@ const adminAuth = (req, res, next) => {
 // Get dashboard stats
 router.get('/dashboard', auth, adminAuth, async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalProviders = await User.countDocuments({ role: 'provider' });
-    const totalClients = await User.countDocuments({ role: 'client' });
-    const totalRequests = await ServiceRequest.countDocuments();
-    const completedRequests = await ServiceRequest.countDocuments({ status: 'completed' });
-    
-    // Calculate total commission earned
-    const completedRequestsWithCommission = await ServiceRequest.find({ 
-      status: 'completed',
-      paymentStatus: 'paid'
-    });
-    
-    const totalCommission = completedRequestsWithCommission.reduce((sum, req) => sum + req.adminCommission, 0);
-    
+    const [totalUsers, totalProviders, totalClients, totalRequests, completedRequests, commissionAgg] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'provider' }),
+      User.countDocuments({ role: 'client' }),
+      ServiceRequest.countDocuments(),
+      ServiceRequest.countDocuments({ status: 'completed' }),
+      // Aggregate instead of loading all docs into memory
+      ServiceRequest.aggregate([
+        { $match: { status: 'completed', paymentStatus: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$adminCommission' } } }
+      ])
+    ]);
+
     res.json({
-      totalUsers,
-      totalProviders,
-      totalClients,
-      totalRequests,
-      completedRequests,
-      totalCommission
+      totalUsers, totalProviders, totalClients,
+      totalRequests, completedRequests,
+      totalCommission: commissionAgg[0]?.total || 0
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all users
+// Get all users — paginated
 router.get('/users', auth, adminAuth, async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const skip  = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find().select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      User.countDocuments()
+    ]);
+    res.json({ users, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all service requests
+// Get all service requests — paginated
 router.get('/requests', auth, adminAuth, async (req, res) => {
   try {
-    const requests = await ServiceRequest.find()
-      .populate('client', 'name email')
-      .populate('provider', 'name email')
-      .sort({ createdAt: -1 });
-    
-    res.json(requests);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const skip  = (page - 1) * limit;
+
+    const [requests, total] = await Promise.all([
+      ServiceRequest.find()
+        .select('-chatMessages -eventPosts')
+        .populate('client',   'name email')
+        .populate('provider', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      ServiceRequest.countDocuments()
+    ]);
+    res.json({ requests, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -6,510 +6,160 @@
     <title>Stand-In App - Register</title>
     <style>
         :root {
-            --bg-1: #07111f;
-            --bg-2: #101a2d;
-            --line: rgba(120, 147, 187, 0.18);
-            --text: #ecf7ff;
-            --muted: #98abc6;
-            --cyan: #41e4de;
-            --pink: #ff4f88;
-            --cyan-soft: rgba(65, 228, 222, 0.28);
-            --pink-soft: rgba(255, 79, 136, 0.22);
-            --danger: #ff8aa8;
-            --success: #69f1c5;
+            --bg-1: #07111f; --bg-2: #101a2d; --line: rgba(120,147,187,0.18);
+            --text: #ecf7ff; --muted: #98abc6; --cyan: #41e4de; --pink: #ff4f88;
+            --cyan-soft: rgba(65,228,222,0.28); --pink-soft: rgba(255,79,136,0.22);
+            --danger: #ff8aa8; --success: #69f1c5;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            color-scheme: dark;
-        }
-
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { color-scheme: dark; }
         body {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 24px;
-            overflow-x: hidden;
-            background:
-                radial-gradient(circle at 20% 20%, rgba(65, 228, 222, 0.12), transparent 28%),
-                radial-gradient(circle at 80% 15%, rgba(255, 79, 136, 0.12), transparent 24%),
-                radial-gradient(circle at 70% 80%, rgba(246, 193, 119, 0.08), transparent 30%),
-                linear-gradient(160deg, var(--bg-1), var(--bg-2));
-            color: var(--text);
-            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            min-height:100vh; display:grid; place-items:center; padding:24px;
+            overflow-x:hidden;
+            background: radial-gradient(circle at 20% 20%, rgba(65,228,222,0.12), transparent 28%),
+                        radial-gradient(circle at 80% 15%, rgba(255,79,136,0.12), transparent 24%),
+                        radial-gradient(circle at 70% 80%, rgba(246,193,119,0.08), transparent 30%),
+                        linear-gradient(160deg, var(--bg-1), var(--bg-2));
+            color:var(--text); font-family:"Trebuchet MS","Segoe UI",sans-serif;
         }
-
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            width: 360px;
-            height: 360px;
-            border-radius: 50%;
-            filter: blur(72px);
-            opacity: 0.38;
-            pointer-events: none;
+        body::before, body::after {
+            content:""; position:fixed; width:360px; height:360px;
+            border-radius:50%; filter:blur(72px); opacity:0.38; pointer-events:none;
         }
-
-        body::before {
-            top: -80px;
-            left: -60px;
-            background: var(--cyan-soft);
-        }
-
-        body::after {
-            right: -120px;
-            bottom: -80px;
-            background: var(--pink-soft);
-        }
+        body::before { top:-80px; left:-60px; background:var(--cyan-soft); }
+        body::after  { right:-120px; bottom:-80px; background:var(--pink-soft); }
 
         .auth-shell {
-            position: relative;
-            width: min(100%, 1160px);
-            min-height: 680px;
-            display: grid;
-            grid-template-columns: minmax(280px, 1fr) minmax(360px, 560px);
-            align-items: center;
-            gap: 36px;
-            padding: 32px;
-            border-radius: 34px;
-            background: rgba(7, 17, 31, 0.62);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            box-shadow:
-                0 30px 80px rgba(2, 7, 18, 0.58),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(18px);
+            position:relative; width:min(100%,1160px); min-height:680px;
+            display:grid; grid-template-columns:minmax(280px,1fr) minmax(360px,560px);
+            align-items:center; gap:36px; padding:32px; border-radius:34px;
+            background:rgba(7,17,31,0.62); border:1px solid rgba(255,255,255,0.04);
+            box-shadow:0 30px 80px rgba(2,7,18,0.58), inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter:blur(18px);
         }
+        .auth-shell::before, .auth-shell::after { content:""; position:absolute; width:120px; height:120px; pointer-events:none; }
+        .auth-shell::before { top:18px; left:18px; border-top:2px solid var(--cyan); border-left:2px solid var(--cyan); border-radius:20px 0 0 0; filter:drop-shadow(0 0 12px rgba(65,228,222,0.4)); }
+        .auth-shell::after  { bottom:18px; right:18px; border-bottom:2px solid var(--pink); border-right:2px solid var(--pink); border-radius:0 0 20px 0; filter:drop-shadow(0 0 12px rgba(255,79,136,0.4)); }
 
-        .auth-shell::before,
-        .auth-shell::after {
-            content: "";
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            pointer-events: none;
-        }
-
-        .auth-shell::before {
-            top: 18px;
-            left: 18px;
-            border-top: 2px solid var(--cyan);
-            border-left: 2px solid var(--cyan);
-            border-radius: 20px 0 0 0;
-            filter: drop-shadow(0 0 12px rgba(65, 228, 222, 0.4));
-        }
-
-        .auth-shell::after {
-            bottom: 18px;
-            right: 18px;
-            border-bottom: 2px solid var(--pink);
-            border-right: 2px solid var(--pink);
-            border-radius: 0 0 20px 0;
-            filter: drop-shadow(0 0 12px rgba(255, 79, 136, 0.4));
-        }
-
-        .stage-copy {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 450px;
-        }
-
-        .stage-copy span {
-            font-size: 12px;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        .stage-copy h1 {
-            font-size: clamp(28px, 4vw, 38px);
-            line-height: 1.06;
-        }
-
-        .stage-copy p {
-            color: var(--muted);
-            line-height: 1.7;
-            font-size: 15px;
-            max-width: 36ch;
-        }
-
-        .benefits {
-            display: grid;
-            gap: 12px;
-            margin-top: 14px;
-        }
-
-        .benefit {
-            padding: 16px 18px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .benefit strong {
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .benefit p {
-            font-size: 14px;
-            max-width: none;
-        }
+        .stage-copy { position:relative; z-index:2; display:flex; flex-direction:column; gap:12px; max-width:450px; }
+        .stage-copy h1 { font-size:clamp(28px,4vw,38px); line-height:1.06; }
+        .stage-copy p  { color:var(--muted); line-height:1.7; font-size:15px; max-width:36ch; }
+        .benefits { display:grid; gap:12px; margin-top:14px; }
+        .benefit { padding:16px 18px; border-radius:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.05); }
+        .benefit strong { display:block; margin-bottom:6px; }
+        .benefit p { font-size:14px; max-width:none; }
 
         .portal-card {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            max-height: 88vh;
-            border-radius: 24px;
-            background: linear-gradient(180deg, rgba(22, 30, 48, 0.98), rgba(14, 20, 34, 0.99));
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow:
-                0 24px 50px rgba(3, 9, 20, 0.65),
-                inset 0 1px 0 rgba(255, 255, 255, 0.06);
-            overflow: hidden;
+            position:relative; z-index:2; width:100%; max-height:88vh;
+            border-radius:24px;
+            background:linear-gradient(180deg,rgba(22,30,48,0.98),rgba(14,20,34,0.99));
+            border:1px solid rgba(255,255,255,0.08);
+            box-shadow:0 24px 50px rgba(3,9,20,0.65), inset 0 1px 0 rgba(255,255,255,0.06);
+            overflow:hidden;
         }
+        .portal-card::before { display:none; }
+        .card-scroll { position:relative; z-index:1; padding:36px 32px 32px; max-height:88vh; overflow-y:auto; }
 
-        .portal-card::before {
-            display: none;
-        }
+        .brand-copy { text-align:center; margin-bottom:22px; }
+        .brand-copy h2 { font-size:22px; letter-spacing:0.26em; text-transform:uppercase; margin-bottom:10px; }
+        .brand-copy p  { color:var(--muted); line-height:1.6; font-size:14px; }
 
-        .card-scroll {
-            position: relative;
-            z-index: 1;
-            padding: 36px 32px 32px;
-            max-height: 88vh;
-            overflow-y: auto;
-        }
+        .msg { display:none; padding:12px 14px; border-radius:16px; margin-bottom:16px; font-size:14px; }
+        .msg.error   { border:1px solid rgba(255,138,168,0.35); background:rgba(255,79,136,0.1);  color:var(--danger); }
+        .msg.success { border:1px solid rgba(105,241,197,0.3);  background:rgba(105,241,197,0.1); color:var(--success); }
 
-        .brand-copy {
-            text-align: center;
-            margin-bottom: 22px;
+        .register-form { display:grid; gap:16px; }
+        .form-section { padding:18px; border-radius:22px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); }
+        .section-title { font-size:15px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
+        .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+        .form-group { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+        .form-group:last-child { margin-bottom:0; }
+        label { font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
+        input, select, textarea {
+            width:100%; padding:14px 16px; border:1px solid rgba(228,239,255,0.16);
+            background:rgba(7,11,19,0.58); color:var(--text); border-radius:18px;
+            font-size:15px; font-family:inherit;
+            transition:border-color 0.25s, box-shadow 0.25s, transform 0.25s;
         }
+        input:focus, select:focus, textarea:focus {
+            outline:none; border-color:rgba(65,228,222,0.72);
+            box-shadow:0 0 0 4px rgba(65,228,222,0.14); transform:translateY(-1px);
+        }
+        textarea { min-height:110px; resize:vertical; }
+        .help-text { color:var(--muted); font-size:12px; line-height:1.5; }
 
-        .brand-copy h2 {
-            font-size: 22px;
-            letter-spacing: 0.26em;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
+        .photo-upload { display:flex; align-items:center; gap:16px; }
+        .photo-preview { width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid rgba(65,228,222,0.4); background:rgba(7,11,19,0.6); flex-shrink:0; }
+        .photo-label { display:inline-block; padding:10px 18px; border-radius:999px; border:1px solid rgba(65,228,222,0.35); background:rgba(65,228,222,0.08); color:var(--cyan); font-size:13px; cursor:pointer; transition:background 0.2s, border-color 0.2s; letter-spacing:0.06em; }
+        .photo-label:hover { background:rgba(65,228,222,0.16); border-color:rgba(65,228,222,0.6); }
+        #profilePhoto { display:none; }
 
-        .brand-copy p {
-            color: var(--muted);
-            line-height: 1.6;
-            font-size: 14px;
-        }
+        .hidden { display:none !important; }
+        .service-tags { display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
+        .service-tag { padding:9px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:var(--muted); font-size:13px; cursor:pointer; transition:transform 0.2s, border-color 0.2s, background 0.2s, color 0.2s; user-select:none; }
+        .service-tag:hover, .service-tag.selected { transform:translateY(-1px); border-color:rgba(65,228,222,0.45); background:rgba(65,228,222,0.12); color:var(--text); }
 
-        .error,
-        .success {
-            display: none;
-            padding: 12px 14px;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
-        .error {
-            border: 1px solid rgba(255, 138, 168, 0.35);
-            background: rgba(255, 79, 136, 0.1);
-            color: var(--danger);
-        }
-
-        .success {
-            border: 1px solid rgba(105, 241, 197, 0.3);
-            background: rgba(105, 241, 197, 0.1);
-            color: var(--success);
-        }
-
-        .register-form {
-            display: grid;
-            gap: 16px;
-        }
-
-        .form-section {
-            padding: 18px;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .section-title {
-            font-size: 15px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 16px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            font-size: 12px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid rgba(228, 239, 255, 0.16);
-            background: rgba(7, 11, 19, 0.58);
-            color: var(--text);
-            border-radius: 18px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: rgba(65, 228, 222, 0.72);
-            box-shadow: 0 0 0 4px rgba(65, 228, 222, 0.14);
-            transform: translateY(-1px);
-        }
-
-        textarea {
-            min-height: 110px;
-            resize: vertical;
-        }
-
-        .help-text {
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .photo-upload {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .photo-preview {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(65, 228, 222, 0.4);
-            background: rgba(7, 11, 19, 0.6);
-            flex-shrink: 0;
-        }
-
-        .photo-label {
-            display: inline-block;
-            padding: 10px 18px;
-            border-radius: 999px;
-            border: 1px solid rgba(65, 228, 222, 0.35);
-            background: rgba(65, 228, 222, 0.08);
-            color: var(--cyan);
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.2s ease, border-color 0.2s ease;
-            letter-spacing: 0.06em;
-        }
-
-        .photo-label:hover {
-            background: rgba(65, 228, 222, 0.16);
-            border-color: rgba(65, 228, 222, 0.6);
-        }
-
-        #profilePhoto {
-            display: none;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .service-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 6px;
-        }
-
-        .service-tag {
-            padding: 9px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--muted);
-            font-size: 13px;
-            cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-            user-select: none;
-        }
-
-        .service-tag:hover,
-        .service-tag.selected {
-            transform: translateY(-1px);
-            border-color: rgba(65, 228, 222, 0.45);
-            background: rgba(65, 228, 222, 0.12);
-            color: var(--text);
-        }
-
-        .checkbox-stack {
-            display: grid;
-            gap: 12px;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            color: var(--muted);
-            line-height: 1.5;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-top: 2px;
-            accent-color: var(--cyan);
-        }
-
-        .checkbox-group label {
-            letter-spacing: normal;
-            text-transform: none;
-            font-size: 14px;
-            color: var(--muted);
-        }
+        .checkbox-stack { display:grid; gap:12px; }
+        .checkbox-group { display:flex; align-items:flex-start; gap:10px; color:var(--muted); line-height:1.5; }
+        .checkbox-group input[type="checkbox"] { width:18px; height:18px; margin-top:2px; accent-color:var(--cyan); }
+        .checkbox-group label { letter-spacing:normal; text-transform:none; font-size:14px; color:var(--muted); }
 
         .submit-button {
-            border: 0;
-            border-radius: 999px;
-            padding: 15px 20px;
-            font-size: 15px;
-            font-weight: 700;
-            color: #06131d;
-            background: linear-gradient(135deg, #41e4de, #69f1c5);
-            cursor: pointer;
-            box-shadow: 0 16px 32px rgba(65, 228, 222, 0.28);
-            transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+            border:0; border-radius:999px; padding:15px 20px; font-size:15px; font-weight:700;
+            color:#06131d; background:linear-gradient(135deg,#41e4de,#69f1c5); cursor:pointer;
+            box-shadow:0 16px 32px rgba(65,228,222,0.28); transition:transform 0.25s, box-shadow 0.25s, opacity 0.25s;
         }
+        .submit-button:hover { transform:translateY(-2px); box-shadow:0 22px 34px rgba(65,228,222,0.34); }
+        .submit-button:disabled { opacity:0.7; cursor:wait; transform:none; }
 
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 22px 34px rgba(65, 228, 222, 0.34);
+        .footer-row { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; font-size:13px; color:var(--muted); padding-top:4px; }
+        .footer-row a { color:var(--pink); text-decoration:none; font-weight:700; }
+        .footer-row a:hover { text-decoration:underline; }
+
+        .loading { display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid rgba(6,19,29,0.24); border-top-color:#06131d; animation:spin 1s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* OTP screen */
+        .otp-screen { display:none; text-align:center; padding:20px 0; }
+        .otp-icon { font-size:48px; margin-bottom:16px; }
+        .otp-screen h3 { font-size:20px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px; }
+        .otp-screen p  { color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:24px; }
+        .otp-screen p strong { color:var(--cyan); }
+        .otp-input {
+            width:100%; text-align:center; font-size:28px; font-weight:700; letter-spacing:14px;
+            padding:18px; border-radius:18px; border:1px solid rgba(65,228,222,0.35);
+            background:rgba(7,11,19,0.6); color:var(--text); margin-bottom:16px;
         }
+        .otp-input:focus { outline:none; border-color:rgba(65,228,222,0.72); box-shadow:0 0 0 4px rgba(65,228,222,0.14); }
+        .resend-link { background:none; border:0; color:var(--pink); font-size:13px; cursor:pointer; text-decoration:underline; margin-top:12px; }
+        .resend-link:disabled { color:var(--muted); cursor:default; text-decoration:none; }
 
-        .submit-button:disabled {
-            opacity: 0.7;
-            cursor: wait;
-            transform: none;
+        @media (max-width:940px) {
+            .auth-shell { grid-template-columns:1fr; justify-items:center; gap:22px; }
+            .stage-copy { text-align:center; align-items:center; }
         }
-
-        .footer-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            font-size: 13px;
-            color: var(--muted);
-            padding-top: 4px;
-        }
-
-        .footer-row a {
-            color: var(--pink);
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .footer-row a:hover {
-            text-decoration: underline;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 2px solid rgba(6, 19, 29, 0.24);
-            border-top-color: #06131d;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @media (max-width: 940px) {
-            .auth-shell {
-                grid-template-columns: 1fr;
-                justify-items: center;
-                gap: 22px;
-            }
-
-            .stage-copy {
-                text-align: center;
-                align-items: center;
-            }
-        }
-
-        @media (max-width: 620px) {
-            body {
-                padding: 14px;
-            }
-
-            .auth-shell {
-                padding: 20px;
-            }
-
-            .card-scroll {
-                padding: 32px 20px 24px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width:620px) {
+            body { padding:14px; }
+            .auth-shell { padding:20px; }
+            .card-scroll { padding:32px 20px 24px; }
+            .form-grid { grid-template-columns:1fr; }
         }
     </style>
 </head>
 <body>
     <main class="auth-shell">
         <div class="stage-copy">
-            <img src="logo.svg" alt="Stand-In" style="width:160px; margin-bottom:4px;">
+            <img src="logo.svg" alt="Stand-In" style="width:160px;margin-bottom:4px;">
             <h1>Create a strong first impression before clients ever book.</h1>
-            <p>Use the same elegant entry style as the login experience, then build a profile that makes the marketplace feel polished and trustworthy from the start.</p>
-
+            <p>Build your profile so clients can trust you before they even make a booking.</p>
             <div class="benefits">
                 <div class="benefit">
                     <strong>For clients</strong>
-                    <p>Join quickly and start booking trusted help through a cleaner, more premium flow.</p>
+                    <p>Join quickly and start booking trusted help through a secure, verified flow.</p>
                 </div>
                 <div class="benefit">
                     <strong>For providers</strong>
-                    <p>Add services, rates, bio, and location so clients can actually judge your profile before choosing you.</p>
+                    <p>Add services, rates, bio, and location so clients can choose you with confidence.</p>
                 </div>
             </div>
         </div>
@@ -518,16 +168,16 @@
             <div class="card-scroll">
                 <div class="brand-copy">
                     <h2>CREATE ACCOUNT</h2>
-                    <p>Join Stand-In today. Fill in your details below — the more complete your profile, the better your experience on the platform.</p>
+                    <p>Your email will be verified with a 6-digit code before you can log in.</p>
                 </div>
 
-                <div id="errorMessage" class="error"></div>
-                <div id="successMessage" class="success"></div>
+                <div id="errorMessage" class="msg error"></div>
+                <div id="successMessage" class="msg success"></div>
 
+                <!-- REGISTRATION FORM -->
                 <form id="registerForm" class="register-form">
                     <div class="form-section">
                         <div class="section-title">Basic Information</div>
-
                         <div class="form-group">
                             <label>Profile Photo</label>
                             <div class="photo-upload">
@@ -539,41 +189,59 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="name">Full Name</label>
                                 <input type="text" id="name" required>
                             </div>
-
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
                                 <input type="tel" id="phone" required>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label for="email">Email Address</label>
                             <input type="email" id="email" required>
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input type="password" id="password" required minlength="6">
-                                <div class="help-text">Minimum 6 characters.</div>
+                                <input type="password" id="password" required minlength="8">
+                                <div class="help-text">Minimum 8 characters.</div>
                             </div>
-
                             <div class="form-group">
                                 <label for="location">Location</label>
                                 <input type="text" id="location" placeholder="City, area, or region">
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <select id="country" required>
+                                    <option value="">Select your country...</option>
+                                    <option value="UG">🇺🇬 Uganda (UGX)</option>
+                                    <option value="KE">🇰🇪 Kenya (KES)</option>
+                                    <option value="TZ">🇹🇿 Tanzania (TZS)</option>
+                                    <option value="RW">🇷🇼 Rwanda (RWF)</option>
+                                    <option value="BI">🇧🇮 Burundi (BIF)</option>
+                                    <option value="SS">🇸🇸 South Sudan (SSP)</option>
+                                    <option value="GB">🇬🇧 United Kingdom (GBP)</option>
+                                    <option value="US">🇺🇸 United States (USD)</option>
+                                    <option value="NG">🇳🇬 Nigeria (USD)</option>
+                                    <option value="GH">🇬🇭 Ghana (USD)</option>
+                                    <option value="ZA">🇿🇦 South Africa (USD)</option>
+                                    <option value="IN">🇮🇳 India (USD)</option>
+                                    <option value="DE">🇩🇪 Germany (GBP)</option>
+                                    <option value="FR">🇫🇷 France (GBP)</option>
+                                    <option value="OTHER">🌍 Other (USD)</option>
+                                </select>
+                                <div class="help-text" id="currencyHint" style="color:var(--cyan);margin-top:4px;"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-section">
                         <div class="section-title">Account Type</div>
-
                         <div class="form-group">
                             <label for="role">I Want To</label>
                             <select id="role" required>
@@ -587,10 +255,9 @@
 
                     <div id="providerFields" class="form-section hidden">
                         <div class="section-title">Provider Profile</div>
-
                         <div class="form-group">
                             <label>Services I Can Provide</label>
-                            <div class="help-text">Select every service category you want clients to see on your profile.</div>
+                            <div class="help-text">Select every service category you want clients to see.</div>
                             <div class="service-tags">
                                 <div class="service-tag" data-service="tutoring">Tutoring</div>
                                 <div class="service-tag" data-service="companionship">Companionship</div>
@@ -605,31 +272,26 @@
                             </div>
                             <input type="hidden" id="selectedServices">
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="hourlyRate">Hourly Rate (USD)</label>
                                 <input type="number" id="hourlyRate" min="5" max="500" step="5">
-                                <div class="help-text">Set your hourly rate between $5 and $500.</div>
+                                <div class="help-text">Between $5 and $500.</div>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label for="bio">About Me</label>
-                            <textarea id="bio" placeholder="Tell clients what makes your service experience worth booking."></textarea>
-                            <div class="help-text">This description will help clients choose you before they book.</div>
+                            <textarea id="bio" placeholder="Tell clients what makes your service worth booking."></textarea>
                         </div>
                     </div>
 
                     <div class="form-section">
                         <div class="section-title">Account Preferences</div>
-
                         <div class="checkbox-stack">
                             <div class="checkbox-group">
                                 <input type="checkbox" id="agreeTerms" required>
                                 <label for="agreeTerms">I agree to the Terms of Service and Privacy Policy.</label>
                             </div>
-
                             <div class="checkbox-group">
                                 <input type="checkbox" id="setupPaymentLater">
                                 <label for="setupPaymentLater">I'll set up payment methods later.</label>
@@ -639,11 +301,28 @@
 
                     <button type="submit" class="submit-button" id="registerBtn">
                         <span id="btnText">Create Account</span>
-                        <span id="btnLoading" class="loading" style="display: none;"></span>
+                        <span id="btnLoading" class="loading" style="display:none;"></span>
                     </button>
                 </form>
 
-                <div class="footer-row">
+                <!-- OTP VERIFICATION SCREEN -->
+                <div id="otpScreen" class="otp-screen">
+                    <div class="otp-icon" id="otpIcon">📧</div>
+                    <h3>Verify Your Account</h3>
+                    <p id="otpDesc">We sent a 6-digit code to <strong id="otpEmailHint"></strong>.<br>Enter it below to activate your account.</p>
+
+
+
+                    <div id="otpError" class="msg error"></div>
+                    <form id="otpForm">
+                        <input type="text" class="otp-input" id="otpInput" maxlength="6" placeholder="000000" autocomplete="one-time-code" inputmode="numeric" required>
+                        <button type="submit" class="submit-button" id="otpBtn" style="width:100%">Verify &amp; Activate</button>
+                    </form>
+                    <br>
+                    <button type="button" class="resend-link" id="resendOtp">Resend code</button>
+                </div>
+
+                <div class="footer-row" id="footerRow">
                     <span>Already have an account?</span>
                     <a href="login.html">Sign in here</a>
                 </div>
@@ -652,176 +331,197 @@
     </main>
 
     <script>
-        const registerForm = document.getElementById('registerForm');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const registerBtn = document.getElementById('registerBtn');
-        const btnText = document.getElementById('btnText');
-        const btnLoading = document.getElementById('btnLoading');
         let selectedServices = new Set();
         let profileImageBase64 = '';
+        let pendingUserId = null;
+        let setupLaterChecked = false;
+        const verifyMethod = 'email';
+        let pendingPhone = '';
+        let pendingEmail = '';
+
+        function showOtpScreen() {
+            document.getElementById('otpDesc').innerHTML = 'We sent a 6-digit code to <strong>' + pendingEmail + '</strong>.<br>Enter it below to activate your account.';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('otpScreen').style.display = 'block';
+            document.getElementById('footerRow').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.querySelector('.brand-copy p').textContent = 'Check your email for the verification code.';
+        }
+
+        const COUNTRY_CURRENCY = {
+          UG:'UGX', KE:'KES', TZ:'TZS', RW:'RWF', BI:'BIF', SS:'SSP',
+          GB:'GBP', US:'USD', NG:'USD', GH:'USD', ZA:'USD', IN:'USD',
+          DE:'GBP', FR:'GBP', OTHER:'USD'
+        };
+        const CURRENCY_LABELS = {
+          UGX:'Ugandan Shilling', KES:'Kenyan Shilling', TZS:'Tanzanian Shilling',
+          RWF:'Rwandan Franc', BIF:'Burundian Franc', SSP:'South Sudanese Pound',
+          GBP:'British Pound', USD:'US Dollar'
+        };
+
+        document.getElementById('country').addEventListener('change', function() {
+          const cur = COUNTRY_CURRENCY[this.value] || 'USD';
+          document.getElementById('currencyHint').textContent = this.value ? 'Your default currency will be ' + cur + ' — ' + CURRENCY_LABELS[cur] : '';
+        });
 
         document.getElementById('profilePhoto').addEventListener('change', function () {
             const file = this.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = e => {
                 profileImageBase64 = e.target.result;
                 document.getElementById('photoPreview').src = profileImageBase64;
             };
             reader.readAsDataURL(file);
         });
 
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
-
-        function hideMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-        }
-
-        function setLoading(loading) {
-            registerBtn.disabled = loading;
-            btnText.style.display = loading ? 'none' : 'inline';
-            btnLoading.style.display = loading ? 'inline-block' : 'none';
-        }
-
         document.getElementById('role').addEventListener('change', function () {
-            const providerFields = document.getElementById('providerFields');
-            if (this.value === 'provider') {
-                providerFields.classList.remove('hidden');
-            } else {
-                providerFields.classList.add('hidden');
+            const pf = document.getElementById('providerFields');
+            if (this.value === 'provider') { pf.classList.remove('hidden'); }
+            else {
+                pf.classList.add('hidden');
                 selectedServices.clear();
-                updateSelectedServices();
-                document.querySelectorAll('.service-tag').forEach(tag => tag.classList.remove('selected'));
+                document.getElementById('selectedServices').value = '';
+                document.querySelectorAll('.service-tag').forEach(t => t.classList.remove('selected'));
             }
         });
 
         document.querySelectorAll('.service-tag').forEach(tag => {
             tag.addEventListener('click', function () {
-                const service = this.dataset.service;
-                if (selectedServices.has(service)) {
-                    selectedServices.delete(service);
-                    this.classList.remove('selected');
-                } else {
-                    selectedServices.add(service);
-                    this.classList.add('selected');
-                }
-                updateSelectedServices();
+                const s = this.dataset.service;
+                if (selectedServices.has(s)) { selectedServices.delete(s); this.classList.remove('selected'); }
+                else { selectedServices.add(s); this.classList.add('selected'); }
+                document.getElementById('selectedServices').value = Array.from(selectedServices).join(',');
             });
         });
 
-        function updateSelectedServices() {
-            document.getElementById('selectedServices').value = Array.from(selectedServices).join(',');
+        function showError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = msg; el.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        function setLoading(on) {
+            document.getElementById('registerBtn').disabled = on;
+            document.getElementById('btnText').style.display = on ? 'none' : 'inline';
+            document.getElementById('btnLoading').style.display = on ? 'inline-block' : 'none';
         }
 
-        registerForm.addEventListener('submit', async function (e) {
+        // Safe fetch — always returns {ok, data} without throwing
+        async function safeFetch(url, options) {
+            try {
+                const res = await fetch(url, options);
+                let data;
+                try { data = await res.json(); } catch { data = { message: 'Server error. Please try again.' }; }
+                return { ok: res.ok, status: res.status, data };
+            } catch {
+                return { ok: false, status: 0, data: { message: 'Cannot reach the server. Make sure you opened the app via http://localhost:9000 and not as a file.' } };
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            hideMessages();
+            document.getElementById('errorMessage').style.display = 'none';
             setLoading(true);
 
             const role = document.getElementById('role').value;
-
-            if (!profileImageBase64) {
-                showError('Please upload a profile photo.');
-                setLoading(false);
-                return;
-            }
-
-            if (role === 'admin') {
-                try {
-                    const adminCheckResponse = await fetch('/api/auth/admin-count');
-                    const adminData = await adminCheckResponse.json();
-
-                    if (adminData.count >= 2) {
-                        showError('Admin registration is limited to 2 users only.');
-                        setLoading(false);
-                        return;
-                    }
-                } catch (error) {
-                    showError('Error checking admin limit. Please try again.');
-                    setLoading(false);
-                    return;
-                }
-            }
-
+            if (!profileImageBase64) { showError('Please upload a profile photo.'); setLoading(false); return; }
+            const country = document.getElementById('country').value;
+            if (!country) { showError('Please select your country.'); setLoading(false); return; }
             if (role === 'provider') {
-                if (selectedServices.size === 0) {
-                    showError('Please select at least one service you can provide.');
-                    setLoading(false);
-                    return;
-                }
-
-                const hourlyRate = document.getElementById('hourlyRate').value;
-                if (!hourlyRate || hourlyRate < 5) {
-                    showError('Please set a valid hourly rate (minimum $5).');
-                    setLoading(false);
-                    return;
+                if (selectedServices.size === 0) { showError('Please select at least one service.'); setLoading(false); return; }
+                if (!document.getElementById('hourlyRate').value || document.getElementById('hourlyRate').value < 5) {
+                    showError('Please set a valid hourly rate (minimum $5).'); setLoading(false); return;
                 }
             }
 
-            const formData = {
+            pendingEmail = document.getElementById('email').value.trim();
+            pendingPhone = document.getElementById('phone').value.trim();
+            setupLaterChecked = document.getElementById('setupPaymentLater').checked;
+
+            const body = {
                 name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
+                email: pendingEmail,
                 password: document.getElementById('password').value,
-                phone: document.getElementById('phone').value,
+                phone: pendingPhone,
                 location: document.getElementById('location').value,
-                role: role,
-                profileImage: profileImageBase64
+                country, role, profileImage: profileImageBase64
             };
-
             if (role === 'provider') {
-                formData.services = Array.from(selectedServices);
-                formData.hourlyRate = parseFloat(document.getElementById('hourlyRate').value);
-                formData.bio = document.getElementById('bio').value;
+                body.services = Array.from(selectedServices);
+                body.hourlyRate = parseFloat(document.getElementById('hourlyRate').value);
+                body.bio = document.getElementById('bio').value;
             }
 
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+            const { ok, data } = await safeFetch('/api/auth/register', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            setLoading(false);
+
+            if (ok) {
+                pendingUserId = data.userId;
+                verifyMethod = data.verifyMethod || 'email';
+                showOtpScreen();
+            } else if (data.message && data.message.includes('already exists')) {
+                // Account created but tab was closed before OTP — let them verify now
+                // Fetch the userId by attempting resend with email
+                const r2 = await safeFetch('/api/auth/resend-otp-by-email', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingEmail })
                 });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showSuccess('Account created successfully! Redirecting...');
-                    localStorage.setItem('token', result.token);
-                    localStorage.setItem('user', JSON.stringify(result.user));
-
-                    setTimeout(() => {
-                        if (result.user.role === 'admin') {
-                            window.location.href = 'admin-dashboard.html';
-                            return;
-                        }
-
-                        const setupLater = document.getElementById('setupPaymentLater').checked;
-                        window.location.href = setupLater ? 'dashboard.html' : 'payment-setup.html';
-                    }, 1500);
+                if (r2.ok) {
+                    pendingUserId = r2.data.userId;
+                    verifyMethod = 'email';
+                    showOtpScreen();
                 } else {
-                    showError(result.message);
+                    showError('An account with this email already exists. Try logging in instead.');
                 }
-            } catch (error) {
-                showError('Network error. Please check your connection and try again.');
-            } finally {
-                setLoading(false);
+            } else {
+                showError(data.message || 'Registration failed. Please try again.');
             }
         });
 
+        document.getElementById('otpForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('otpBtn');
+            const otpErr = document.getElementById('otpError');
+            otpErr.style.display = 'none';
+            btn.disabled = true; btn.textContent = 'Verifying...';
+
+            const { ok, data } = await safeFetch('/api/auth/verify-otp', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: pendingUserId, otp: document.getElementById('otpInput').value.trim() })
+            });
+
+            if (ok) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = data.user.role === 'admin' ? 'admin-dashboard.html' : (setupLaterChecked ? 'dashboard.html' : 'payment-setup.html');
+            } else {
+                otpErr.textContent = data.message; otpErr.style.display = 'block';
+                btn.disabled = false; btn.textContent = 'Verify & Activate';
+            }
+        });
+
+        document.getElementById('resendOtp').addEventListener('click', async function () {
+            const otpErr = document.getElementById('otpError');
+            this.disabled = true; this.textContent = 'Sending...';
+
+            const { ok, data } = await safeFetch('/api/auth/resend-otp', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: pendingUserId, verifyMethod })
+            });
+
+            otpErr.textContent = data.message;
+            otpErr.style.display = 'block';
+            otpErr.style.color = ok ? 'var(--success)' : 'var(--danger)';
+            setTimeout(() => { this.disabled = false; this.textContent = 'Resend code'; }, 30000);
+        });
+
         if (localStorage.getItem('token')) {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            window.location.href = u.role === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
         }
     </script>
 </body>

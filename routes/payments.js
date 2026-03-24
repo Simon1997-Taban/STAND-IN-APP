@@ -1,67 +1,98 @@
 const express = require('express');
+const nodemailer = require('nodemailer');
+const rateLimit = require('express-rate-limit');
 const { PaymentMethod, Transaction } = require('../models/Payment');
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const {
-  DEFAULT_CURRENCY,
-  SUPPORTED_CURRENCIES,
-  convertFromUsd,
-  getExchangeRate,
-  isSupportedCurrency,
-  normalizeCurrency,
-  roundMoney
+  DEFAULT_CURRENCY, SUPPORTED_CURRENCIES,
+  convertFromUsd, getExchangeRate,
+  isSupportedCurrency, normalizeCurrency, roundMoney
 } = require('../utils/currency');
 const router = express.Router();
 
-router.get('/currencies', auth, async (req, res) => {
+const COMMISSION_RATE = 0.10;
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Too many payment attempts. Please wait 15 minutes.' },
+  standardHeaders: true, legacyHeaders: false
+}); // 10%
+
+function generateConfirmCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function getTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+  });
+}
+
+async function sendPaymentConfirmEmail(email, name, code, amount, currency) {
+  const transporter = getTransporter();
+  await transporter.sendMail({
+    from: `"Stand-In App" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Confirm your Stand-In payment',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#07111f;color:#ecf7ff;border-radius:16px;">
+        <h2 style="color:#41e4de;">Payment Confirmation</h2>
+        <p style="color:#98abc6;">Hi ${name}, you initiated a payment of <strong style="color:#ecf7ff;">${currency} ${amount}</strong> via mobile money.</p>
+        <p style="color:#98abc6;margin-bottom:24px;">Enter this code in the app to confirm:</p>
+        <div style="font-size:36px;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;background:rgba(65,228,222,0.1);border-radius:12px;color:#41e4de;">${code}</div>
+        <p style="color:#98abc6;margin-top:24px;font-size:13px;">This code expires in 10 minutes. If you did not initiate this payment, contact support immediately.</p>
+      </div>
+    `
+  });
+}
+
+async function finalizePayment(transaction, serviceRequest) {
+  transaction.status = 'completed';
+  transaction.completedAt = new Date();
+  transaction.commissionSentToAdmin = true;
+  transaction.providerAmountReleased = true;
+  await transaction.save();
+
+  serviceRequest.paymentStatus = 'paid';
+  serviceRequest.status = 'completed';
+  await serviceRequest.save();
+}
+
+// Get currencies
+router.get('/currencies', auth, (req, res) => {
   res.json(SUPPORTED_CURRENCIES);
 });
 
-// Add payment method
+// Add payment method (no cash)
 router.post('/methods', auth, async (req, res) => {
   try {
-    const { type, bankName, accountNumber, accountName, routingNumber, swiftCode, 
-            mobileProvider, mobileNumber, mobileAccountName, walletEmail, walletId, currency, cashLabel } = req.body;
+    const {
+      type, bankName, accountNumber, accountName, routingNumber, swiftCode,
+      mobileProvider, mobileNumber, mobileAccountName, walletEmail, walletId, currency
+    } = req.body;
 
-    const selectedCurrency = isSupportedCurrency(currency)
-      ? normalizeCurrency(currency)
-      : DEFAULT_CURRENCY;
+    if (type === 'cash')
+      return res.status(400).json({ message: 'Cash payments are not accepted. Please use bank, mobile money, or digital wallet.' });
 
-    if (type === 'cash' && !isSupportedCurrency(selectedCurrency)) {
-      return res.status(400).json({ message: 'Select a valid cash payment currency' });
-    }
-    
-    // If this is the first payment method, make it default
-    const existingMethods = await PaymentMethod.countDocuments({ user: req.user.userId });
-    const isDefault = existingMethods === 0;
-    
-    // If setting as default, remove default from other methods
+    const selectedCurrency = isSupportedCurrency(currency) ? normalizeCurrency(currency) : DEFAULT_CURRENCY;
+    const existingCount = await PaymentMethod.countDocuments({ user: req.user.userId });
+    const isDefault = existingCount === 0;
+
     if (req.body.isDefault || isDefault) {
-      await PaymentMethod.updateMany(
-        { user: req.user.userId },
-        { isDefault: false }
-      );
+      await PaymentMethod.updateMany({ user: req.user.userId }, { isDefault: false });
     }
-    
+
     const paymentMethod = new PaymentMethod({
-      user: req.user.userId,
-      type,
-      bankName,
-      accountNumber,
-      accountName,
-      routingNumber,
-      swiftCode,
-      mobileProvider,
-      mobileNumber,
-      mobileAccountName,
-      walletEmail,
-      walletId,
-      currency: selectedCurrency,
-      cashLabel,
+      user: req.user.userId, type, bankName, accountNumber, accountName,
+      routingNumber, swiftCode, mobileProvider, mobileNumber, mobileAccountName,
+      walletEmail, walletId, currency: selectedCurrency,
       isDefault: req.body.isDefault || isDefault
     });
-    
+
     await paymentMethod.save();
     res.status(201).json(paymentMethod);
   } catch (error) {
@@ -69,15 +100,12 @@ router.post('/methods', auth, async (req, res) => {
   }
 });
 
-// Get user's payment methods
+// Get payment methods
 router.get('/methods', auth, async (req, res) => {
   try {
-    const paymentMethods = await PaymentMethod.find({ 
-      user: req.user.userId, 
-      isActive: true 
-    }).sort({ isDefault: -1, createdAt: -1 });
-    
-    res.json(paymentMethods);
+    const methods = await PaymentMethod.find({ user: req.user.userId, isActive: true })
+      .sort({ isDefault: -1, createdAt: -1 });
+    res.json(methods);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -86,122 +114,79 @@ router.get('/methods', auth, async (req, res) => {
 // Update payment method
 router.put('/methods/:id', auth, async (req, res) => {
   try {
-    const paymentMethod = await PaymentMethod.findOne({
-      _id: req.params.id,
-      user: req.user.userId
-    });
-    
-    if (!paymentMethod) {
-      return res.status(404).json({ message: 'Payment method not found' });
+    const method = await PaymentMethod.findOne({ _id: req.params.id, user: req.user.userId });
+    if (!method) return res.status(404).json({ message: 'Payment method not found' });
+
+    // Explicit whitelist — no mass assignment
+    const allowed = ['bankName','accountNumber','accountName','routingNumber','swiftCode',
+      'mobileProvider','mobileNumber','mobileAccountName','walletEmail','walletId','isDefault'];
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) method[key] = req.body[key];
     }
-    
-    // If setting as default, remove default from other methods
+    if (req.body.currency) method.currency = normalizeCurrency(req.body.currency);
+
     if (req.body.isDefault) {
-      await PaymentMethod.updateMany(
-        { user: req.user.userId, _id: { $ne: req.params.id } },
-        { isDefault: false }
-      );
+      await PaymentMethod.updateMany({ user: req.user.userId, _id: { $ne: req.params.id } }, { isDefault: false });
     }
 
-    if (req.body.currency && !isSupportedCurrency(req.body.currency)) {
-      return res.status(400).json({ message: 'Invalid currency selection' });
-    }
-    
-    Object.assign(paymentMethod, req.body);
-
-    if (req.body.currency) {
-      paymentMethod.currency = normalizeCurrency(req.body.currency);
-    }
-
-    await paymentMethod.save();
-    
-    res.json(paymentMethod);
+    await method.save();
+    res.json(method);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Update failed. Please try again.' });
   }
 });
 
 // Delete payment method
 router.delete('/methods/:id', auth, async (req, res) => {
   try {
-    const paymentMethod = await PaymentMethod.findOne({
-      _id: req.params.id,
-      user: req.user.userId
-    });
-    
-    if (!paymentMethod) {
-      return res.status(404).json({ message: 'Payment method not found' });
-    }
-    
-    paymentMethod.isActive = false;
-    await paymentMethod.save();
-    
-    res.json({ message: 'Payment method deleted successfully' });
+    const method = await PaymentMethod.findOne({ _id: req.params.id, user: req.user.userId });
+    if (!method) return res.status(404).json({ message: 'Payment method not found' });
+    method.isActive = false;
+    await method.save();
+    res.json({ message: 'Payment method removed' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Process payment for service request
-router.post('/process/:requestId', auth, async (req, res) => {
+// Initiate payment — auto-deducts for bank/wallet, sends confirm code for mobile money
+router.post('/process/:requestId', auth, paymentLimiter, async (req, res) => {
   try {
     const { clientPaymentMethodId, paymentCurrency } = req.body;
-    
-    const serviceRequest = await ServiceRequest.findById(req.params.requestId)
-      .populate('client provider');
-    
-    if (!serviceRequest) {
-      return res.status(404).json({ message: 'Service request not found' });
-    }
-    
-    // Verify user is the client
-    if (serviceRequest.client._id.toString() !== req.user.userId) {
+
+    const serviceRequest = await ServiceRequest.findById(req.params.requestId).populate('client provider');
+    if (!serviceRequest) return res.status(404).json({ message: 'Service request not found' });
+
+    if (serviceRequest.client._id.toString() !== req.user.userId)
       return res.status(403).json({ message: 'Unauthorized' });
-    }
-    
-    // Check if request is accepted
-    if (serviceRequest.status !== 'accepted') {
+
+    if (serviceRequest.status !== 'accepted')
       return res.status(400).json({ message: 'Service request must be accepted before payment' });
-    }
-    
-    // Check if already paid or processing
+
     if (['processing', 'paid'].includes(serviceRequest.paymentStatus))
       return res.status(400).json({ message: 'Payment already initiated for this request' });
 
-    // Get client payment method
-    const clientPaymentMethod = await PaymentMethod.findOne({
-      _id: clientPaymentMethodId,
-      user: req.user.userId,
-      isActive: true
-    });
-    
-    if (!clientPaymentMethod) {
-      return res.status(404).json({ message: 'Payment method not found' });
-    }
-    
-    // Get provider's default payment method
-    const providerPaymentMethod = await PaymentMethod.findOne({
-      user: serviceRequest.provider._id,
-      isDefault: true,
-      isActive: true
-    });
-    
-    if (!providerPaymentMethod) {
-      return res.status(400).json({ message: 'Provider has not set up payment method' });
-    }
-    
-    const baseTotalAmount = roundMoney(serviceRequest.baseTotalAmount || serviceRequest.totalAmount || 0);
-    const baseAdminCommission = roundMoney(serviceRequest.baseAdminCommission || serviceRequest.adminCommission || (baseTotalAmount * 0.15));
-    const baseProviderAmount = roundMoney(baseTotalAmount - baseAdminCommission);
+    const clientMethod = await PaymentMethod.findOne({ _id: clientPaymentMethodId, user: req.user.userId, isActive: true });
+    if (!clientMethod) return res.status(404).json({ message: 'Payment method not found' });
+
+    const providerMethod = await PaymentMethod.findOne({ user: serviceRequest.provider._id, isDefault: true, isActive: true });
+    if (!providerMethod) return res.status(400).json({ message: 'Provider has not set up a payment method yet' });
+
     const selectedCurrency = isSupportedCurrency(paymentCurrency)
       ? normalizeCurrency(paymentCurrency)
-      : normalizeCurrency(serviceRequest.paymentCurrency || clientPaymentMethod.currency || DEFAULT_CURRENCY);
+      : normalizeCurrency(serviceRequest.paymentCurrency || clientMethod.currency || DEFAULT_CURRENCY);
+
     const exchangeRate = getExchangeRate(selectedCurrency);
+    const baseTotalAmount = roundMoney(serviceRequest.baseTotalAmount || serviceRequest.totalAmount || 0);
+    const baseAdminCommission = roundMoney(baseTotalAmount * COMMISSION_RATE);
+    const baseProviderAmount = roundMoney(baseTotalAmount - baseAdminCommission);
     const totalAmount = convertFromUsd(baseTotalAmount, selectedCurrency);
     const adminCommission = convertFromUsd(baseAdminCommission, selectedCurrency);
     const providerAmount = convertFromUsd(baseProviderAmount, selectedCurrency);
-    
-    // Create transaction
+
+    const isMobile = clientMethod.type === 'mobile_money';
+    const paymentType = isMobile ? 'mobile_money' : (clientMethod.type === 'bank_account' ? 'bank' : 'wallet');
+
     const transaction = new Transaction({
       serviceRequest: serviceRequest._id,
       client: serviceRequest.client._id,
@@ -209,42 +194,94 @@ router.post('/process/:requestId', auth, async (req, res) => {
       baseCurrency: DEFAULT_CURRENCY,
       currency: selectedCurrency,
       exchangeRate,
-      baseTotalAmount,
-      baseProviderAmount,
-      baseAdminCommission,
-      totalAmount,
-      providerAmount,
-      adminCommission,
-      clientPaymentMethod: clientPaymentMethod._id,
-      providerPaymentMethod: providerPaymentMethod._id,
-      paymentProcessor: 'manual', // For now, manual processing
+      baseTotalAmount, baseProviderAmount, baseAdminCommission,
+      totalAmount, providerAmount, adminCommission,
+      clientPaymentMethod: clientMethod._id,
+      providerPaymentMethod: providerMethod._id,
+      paymentProcessor: paymentType,
+      paymentType,
       status: 'processing'
     });
-    
+
+    if (isMobile) {
+      // Send confirmation code to client email (simulating SMS)
+      const code = generateConfirmCode();
+      transaction.mobileConfirmCode = code;
+      transaction.mobileConfirmExpires = new Date(Date.now() + 10 * 60 * 1000);
+      transaction.mobileConfirmed = false;
+      await transaction.save();
+
+      serviceRequest.paymentStatus = 'processing';
+      await serviceRequest.save();
+
+      try {
+        await sendPaymentConfirmEmail(
+          serviceRequest.client.email,
+          serviceRequest.client.name,
+          code,
+          totalAmount,
+          selectedCurrency
+        );
+      } catch (e) {
+        console.error('Payment confirm email error:', e.message);
+      }
+
+      return res.json({
+        message: 'A confirmation code has been sent to your email. Enter it to complete the payment.',
+        transactionId: transaction._id,
+        requiresConfirmation: true,
+        breakdown: { currency: selectedCurrency, totalAmount, providerAmount, adminCommission, commissionRate: '10%' }
+      });
+    }
+
+    // Bank / wallet — instant deduction, no confirmation needed
     await transaction.save();
-    
-    // Update service request
-    serviceRequest.baseCurrency = DEFAULT_CURRENCY;
-    serviceRequest.paymentCurrency = selectedCurrency;
-    serviceRequest.exchangeRate = exchangeRate;
-    serviceRequest.baseTotalAmount = baseTotalAmount;
-    serviceRequest.baseAdminCommission = baseAdminCommission;
-    serviceRequest.totalAmount = totalAmount;
-    serviceRequest.adminCommission = adminCommission;
-    serviceRequest.paymentStatus = 'processing';
-    serviceRequest.status = 'in-progress';
-    await serviceRequest.save();
-    
+    await finalizePayment(transaction, serviceRequest);
+
     res.json({
-      message: 'Payment initiated successfully',
-      transaction: transaction,
+      message: 'Payment successful. The provider will receive their amount after the 10% platform commission.',
+      transactionId: transaction._id,
+      requiresConfirmation: false,
+      breakdown: { currency: selectedCurrency, totalAmount, providerAmount, adminCommission, commissionRate: '10%' }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Confirm mobile money payment with code
+router.post('/confirm/:transactionId', auth, paymentLimiter, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ message: 'Confirmation code is required' });
+
+    const transaction = await Transaction.findById(req.params.transactionId);
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+
+    if (transaction.client.toString() !== req.user.userId)
+      return res.status(403).json({ message: 'Unauthorized' });
+
+    if (transaction.mobileConfirmed)
+      return res.status(400).json({ message: 'Payment already confirmed' });
+
+    if (transaction.mobileConfirmCode !== code.trim())
+      return res.status(400).json({ message: 'Incorrect confirmation code' });
+
+    if (transaction.mobileConfirmExpires < new Date())
+      return res.status(400).json({ message: 'Confirmation code has expired. Please initiate payment again.' });
+
+    transaction.mobileConfirmed = true;
+    const serviceRequest = await ServiceRequest.findById(transaction.serviceRequest);
+    await finalizePayment(transaction, serviceRequest);
+
+    res.json({
+      message: 'Payment confirmed! Commission has been directed to the admin. The provider will receive their net amount.',
       breakdown: {
-        currency: selectedCurrency,
-        exchangeRate,
-        totalAmount,
-        providerAmount,
-        adminCommission,
-        commissionRate: '15%'
+        currency: transaction.currency,
+        totalAmount: transaction.totalAmount,
+        providerReceives: transaction.providerAmount,
+        adminCommission: transaction.adminCommission,
+        commissionRate: '10%'
       }
     });
   } catch (error) {
@@ -252,21 +289,41 @@ router.post('/process/:requestId', auth, async (req, res) => {
   }
 });
 
-// Get user's transactions
+// Resend mobile confirmation code
+router.post('/resend-confirm/:transactionId', auth, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.transactionId).populate('client');
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    if (transaction.client._id.toString() !== req.user.userId) return res.status(403).json({ message: 'Unauthorized' });
+    if (transaction.mobileConfirmed) return res.status(400).json({ message: 'Already confirmed' });
+
+    const code = generateConfirmCode();
+    transaction.mobileConfirmCode = code;
+    transaction.mobileConfirmExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await transaction.save();
+
+    await sendPaymentConfirmEmail(
+      transaction.client.email,
+      transaction.client.name,
+      code,
+      transaction.totalAmount,
+      transaction.currency
+    );
+
+    res.json({ message: 'A new confirmation code has been sent to your email.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get transactions
 router.get('/transactions', auth, async (req, res) => {
   try {
     let query = {};
-    
-    if (req.user.role === 'client') {
-      query.client = req.user.userId;
-    } else if (req.user.role === 'provider') {
-      query.provider = req.user.userId;
-    } else if (req.user.role === 'admin') {
-      // Admin can see all transactions
-    } else {
-      return res.status(403).json({ message: 'Unauthorized' });
-    }
-    
+    if (req.user.role === 'client') query.client = req.user.userId;
+    else if (req.user.role === 'provider') query.provider = req.user.userId;
+    else if (req.user.role !== 'admin') return res.status(403).json({ message: 'Unauthorized' });
+
     const transactions = await Transaction.find(query)
       .populate('serviceRequest', 'title serviceType')
       .populate('client', 'name email')
@@ -274,79 +331,30 @@ router.get('/transactions', auth, async (req, res) => {
       .populate('clientPaymentMethod')
       .populate('providerPaymentMethod')
       .sort({ createdAt: -1 });
-    
+
     res.json(transactions);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Admin: Update transaction status
-router.put('/transactions/:id/status', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    
-    const { status, adminNotes } = req.body;
-    
-    const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) {
-      return res.status(404).json({ message: 'Transaction not found' });
-    }
-    
-    transaction.status = status;
-    if (adminNotes) transaction.adminNotes = adminNotes;
-    
-    if (status === 'completed') {
-      transaction.completedAt = new Date();
-      
-      // Update service request
-      await ServiceRequest.findByIdAndUpdate(transaction.serviceRequest, {
-        paymentStatus: 'paid',
-        status: 'completed'
-      });
-    } else if (status === 'failed') {
-      await ServiceRequest.findByIdAndUpdate(transaction.serviceRequest, {
-        paymentStatus: 'failed',
-        status: 'accepted' // revert back so client can retry
-      });
-    }
-    
-    await transaction.save();
-    res.json(transaction);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Get payment statistics (for admin)
+// Payment stats (admin)
 router.get('/stats', auth, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    
-    const totalTransactions = await Transaction.countDocuments();
-    const completedTransactions = await Transaction.countDocuments({ status: 'completed' });
-    const pendingTransactions = await Transaction.countDocuments({ status: 'pending' });
-    
-    const totalRevenue = await Transaction.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+
+    const [totalTransactions, completedTransactions, pendingTransactions, revenueAgg, commissionAgg] = await Promise.all([
+      Transaction.countDocuments(),
+      Transaction.countDocuments({ status: 'completed' }),
+      Transaction.countDocuments({ status: 'processing' }),
+      Transaction.aggregate([{ $match: { status: 'completed' } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+      Transaction.aggregate([{ $match: { status: 'completed' } }, { $group: { _id: null, total: { $sum: '$adminCommission' } } }])
     ]);
-    
-    const totalCommission = await Transaction.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$adminCommission' } } }
-    ]);
-    
+
     res.json({
-      totalTransactions,
-      completedTransactions,
-      pendingTransactions,
-      totalRevenue: totalRevenue[0]?.total || 0,
-      totalCommission: totalCommission[0]?.total || 0
+      totalTransactions, completedTransactions, pendingTransactions,
+      totalRevenue: revenueAgg[0]?.total || 0,
+      totalCommission: commissionAgg[0]?.total || 0
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

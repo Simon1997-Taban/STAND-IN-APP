@@ -571,6 +571,8 @@
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('user', JSON.stringify(result.user));
                     redirectToDashboard();
+                } else if (result.needsVerification) {
+                    showError('This account has not been verified yet. Please complete registration first.');
                 } else {
                     showError(result.message || 'Unable to sign in right now.');
                 }

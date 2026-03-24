@@ -7,7 +7,7 @@ const paymentMethodSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   type: { 
     type: String, 
-    enum: ['bank_account', 'mobile_money', 'paypal', 'stripe', 'cash'], 
+    enum: ['bank_account', 'mobile_money', 'paypal', 'stripe'], 
     required: true 
   },
   currency: {
@@ -75,6 +75,22 @@ const transactionSchema = new mongoose.Schema({
     enum: ['pending', 'processing', 'completed', 'failed', 'refunded', 'disputed'],
     default: 'pending'
   },
+
+  // Payment type determines confirmation flow
+  paymentType: {
+    type: String,
+    enum: ['mobile_money', 'bank', 'wallet'],
+    required: true
+  },
+
+  // Mobile money confirmation code (sent to client phone)
+  mobileConfirmCode: { type: String },
+  mobileConfirmExpires: { type: Date },
+  mobileConfirmed: { type: Boolean, default: false },
+
+  // Commission split tracking
+  commissionSentToAdmin: { type: Boolean, default: false },
+  providerAmountReleased: { type: Boolean, default: false },
   
   // Payment Processing
   paymentProcessor: { type: String }, // 'manual', 'stripe', 'paypal', etc.
@@ -104,6 +120,14 @@ transactionSchema.pre('save', function(next) {
   }
   next();
 });
+
+// Indexes
+paymentMethodSchema.index({ user: 1, isActive: 1 });
+paymentMethodSchema.index({ user: 1, isDefault: 1 });
+transactionSchema.index({ client: 1, createdAt: -1 });
+transactionSchema.index({ provider: 1, createdAt: -1 });
+transactionSchema.index({ status: 1 });
+transactionSchema.index({ serviceRequest: 1 });
 
 const PaymentMethod = mongoose.model('PaymentMethod', paymentMethodSchema);
 const Transaction = mongoose.model('Transaction', transactionSchema);

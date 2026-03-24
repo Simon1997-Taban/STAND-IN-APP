@@ -113,48 +113,56 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Get user's requests
+// Get user's requests — paginated
 router.get('/my-requests', auth, async (req, res) => {
   try {
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+    const skip  = (page - 1) * limit;
+
     let query = {};
-    if (req.user.role === 'client') query.client = req.user.userId;
+    if (req.user.role === 'client')   query.client   = req.user.userId;
     else if (req.user.role === 'provider') query.provider = req.user.userId;
 
-    const requests = await ServiceRequest.find(query)
-      .populate('client', 'name email phone profileImage role')
-      .populate('provider', 'name email phone profileImage services rating role')
-      .sort({ createdAt: -1 });
-    res.json(requests);
+    const [requests, total] = await Promise.all([
+      ServiceRequest.find(query)
+        .select('-chatMessages -eventPosts') // exclude heavy arrays from list view
+        .populate('client',   'name email phone profileImage role')
+        .populate('provider', 'name email phone profileImage services rating role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      ServiceRequest.countDocuments(query)
+    ]);
+
+    res.json({ requests, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Load chat room details and message history
+// Load chat room — paginate messages (last 50 by default)
 router.get('/chat/:roomId', auth, async (req, res) => {
   try {
     const request = await ServiceRequest.findOne({ chatRoom: req.params.roomId })
-      .populate('client', 'name profileImage role')
+      .populate('client',   'name profileImage role')
       .populate('provider', 'name profileImage role');
 
-    if (!request) {
-      return res.status(404).json({ message: 'Chat room not found' });
-    }
+    if (!request) return res.status(404).json({ message: 'Chat room not found' });
+    if (!canAccessRequest(request, req.user)) return res.status(403).json({ message: 'Unauthorized' });
 
-    if (!canAccessRequest(request, req.user)) {
-      return res.status(403).json({ message: 'Unauthorized' });
-    }
+    // Return only the last 50 messages — client loads older ones on scroll
+    const allMessages = request.chatMessages || [];
+    const messages = allMessages.slice(-50);
 
     res.json({
       requestId: request._id,
       roomId: request.chatRoom,
       title: request.title,
       status: request.status,
-      participants: {
-        client: request.client,
-        provider: request.provider
-      },
-      messages: request.chatMessages || []
+      participants: { client: request.client, provider: request.provider },
+      messages,
+      totalMessages: allMessages.length
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
