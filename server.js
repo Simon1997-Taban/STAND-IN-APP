@@ -1,19 +1,4 @@
-const cluster = require('cluster');
-const os = require('os');
-
-// Cluster only works when run as a file (not node -e), and only in production
-if (cluster.isMaster && process.env.NODE_ENV === 'production' && require.main === module) {
-  const cpus = os.cpus().length;
-  console.log(`Master ${process.pid} starting ${cpus} workers`);
-  for (let i = 0; i < cpus; i++) cluster.fork();
-  cluster.on('exit', (worker, code) => {
-    console.warn(`Worker ${worker.process.pid} died (code ${code}). Restarting...`);
-    cluster.fork();
-  });
-  return;
-}
-
-// ── App setup ─────────────────────────────────────────────────────────────────
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -21,7 +6,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const compression = require('compression');
-require('dotenv').config();
 
 if (!process.env.JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is not set in .env');

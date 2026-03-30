@@ -14,6 +14,14 @@ yarn-error.log*
 # Logs
 logs
 *.log
+server-test.log
+
+# Images accidentally committed
+*.jpg
+*.jpeg
+*.png
+!public/**/*.png
+!public/**/*.jpg
 
 # Runtime data
 pids
