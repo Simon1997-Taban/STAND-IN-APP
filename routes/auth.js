@@ -35,26 +35,26 @@ function generateOtp() {
 
 function getTransporter() {
   const user = process.env.EMAIL_USER || '';
-  // Auto-detect provider from email domain
   if (user.endsWith('@gmail.com')) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: { user, pass: process.env.EMAIL_PASS }
     });
   }
   if (user.endsWith('@yahoo.com') || user.endsWith('@ymail.com')) {
     return nodemailer.createTransport({
       host: 'smtp.mail.yahoo.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: { user, pass: process.env.EMAIL_PASS }
     });
   }
-  // Generic SMTP fallback (Outlook, custom domain, etc.)
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.mail.yahoo.com',
-    port: parseInt(process.env.SMTP_PORT || '465'),
-    secure: true,
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false,
     auth: { user, pass: process.env.EMAIL_PASS }
   });
 }

@@ -17,6 +17,9 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const server = http.createServer(app);
 
+// Trust Render's proxy so rate-limit and IP detection work correctly
+app.set('trust proxy', 1);
+
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:9000', 'http://127.0.0.1:9000'];
@@ -52,9 +55,10 @@ app.use((req, res, next) => {
 
 // Request timeout — kill requests that hang longer than 120s
 app.use((req, res, next) => {
-  res.setTimeout(120000, () => {
-    res.status(503).json({ message: 'Request timed out. Please try again.' });
-  });
+    res.setTimeout(120000, () => {
+      if (!res.headersSent)
+        res.status(503).json({ message: 'Request timed out. Please try again.' });
+    });
   next();
 });
 
