@@ -158,23 +158,17 @@ router.post('/register', authLimiter, async (req, res) => {
 
     await user.save();
 
-    try {
-      if (method === 'phone') {
-        await sendOtpSms(phone.trim(), otp);
-      } else {
-        await sendOtpEmail(normalizedEmail, name.trim(), otp);
-      }
-    } catch (mailErr) {
-      console.error('OTP send error:', mailErr.message);
-    }
-
+    // Respond immediately — don't wait for email to avoid timeout
     res.status(201).json({
-      message: method === 'phone'
-        ? 'Account created. Check your phone for a 6-digit verification code.'
-        : 'Account created. Check your email for a 6-digit verification code.',
+      message: 'Account created. Check your email for a 6-digit verification code.',
       userId: user._id,
       verifyMethod: method
     });
+
+    // Send OTP in background after response is sent
+    sendOtpEmail(normalizedEmail, name.trim(), otp).catch(err =>
+      console.error('OTP send error:', err.message)
+    );
   } catch (error) {
     res.status(500).json({ message: 'Registration failed. Please try again.' });
   }
@@ -236,8 +230,8 @@ router.post('/resend-otp-by-email', otpLimiter, async (req, res) => {
     user.otp = await bcrypt.hash(otp, 10);
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
-    await sendOtpEmail(user.email, user.name, otp);
     res.json({ message: 'Verification code sent.', userId: user._id });
+    sendOtpEmail(user.email, user.name, otp).catch(err => console.error('OTP send error:', err.message));
   } catch (error) {
     res.status(500).json({ message: 'Could not send code. Please try again.' });
   }
@@ -255,14 +249,12 @@ router.post('/resend-otp', otpLimiter, async (req, res) => {
     user.otp = await bcrypt.hash(otp, 10);
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
-
-    const method = verifyMethod === 'phone' ? 'phone' : 'email';
     if (method === 'phone') {
-      await sendOtpSms(user.phone, otp);
       res.json({ message: 'A new code has been sent to your phone number.' });
+      sendOtpSms(user.phone, otp).catch(err => console.error('SMS error:', err.message));
     } else {
-      await sendOtpEmail(user.email, user.name, otp);
       res.json({ message: 'A new verification code has been sent to your email.' });
+      sendOtpEmail(user.email, user.name, otp).catch(err => console.error('OTP send error:', err.message));
     }
   } catch (error) {
     res.status(500).json({ message: 'Could not resend code. Please try again.' });
