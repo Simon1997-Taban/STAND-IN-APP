@@ -105,18 +105,30 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 // ── MongoDB ───────────────────────────────────────────────────────────────────
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/standin-app', {
-  maxPoolSize: 20,        // up to 20 concurrent DB connections per worker
-  minPoolSize: 5,         // keep 5 warm connections ready
-  serverSelectionTimeoutMS: 5000,  // fail fast if DB unreachable
-  socketTimeoutMS: 30000, // drop idle DB sockets after 30s
-  heartbeatFrequencyMS: 10000
-})
-  .then(() => console.log(`Worker ${process.pid}: MongoDB connected`))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // worker exits → master restarts it
-  });
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/standin-app';
+
+function connectDB() {
+  mongoose.connect(MONGO_URI, {
+    maxPoolSize: 20,
+    minPoolSize: 2,
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    heartbeatFrequencyMS: 10000
+  })
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => {
+      console.error('MongoDB connection error:', err.message);
+      console.log('Retrying in 10 seconds...');
+      setTimeout(connectDB, 10000);
+    });
+}
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('MongoDB disconnected. Reconnecting...');
+  setTimeout(connectDB, 5000);
+});
+
+connectDB();
 
 // ── Error handling ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
