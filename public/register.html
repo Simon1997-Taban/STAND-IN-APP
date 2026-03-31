@@ -413,8 +413,8 @@
                 let data;
                 try { data = await res.json(); } catch { data = { message: 'Server error. Please try again.' }; }
                 return { ok: res.ok, status: res.status, data };
-            } catch {
-                return { ok: false, status: 0, data: { message: 'Cannot reach the server. Make sure you opened the app via http://localhost:9000 and not as a file.' } };
+            } catch (err) {
+                return { ok: false, status: 0, data: { message: 'Cannot reach the server. Please try again.' } };
             }
         }
 
@@ -425,6 +425,8 @@
 
             const role = document.getElementById('role').value;
             if (!profileImageBase64) { showError('Please upload a profile photo.'); setLoading(false); return; }
+            // Limit photo to 1MB to avoid Render proxy limits
+            if (profileImageBase64.length > 1.5 * 1024 * 1024) { showError('Profile photo is too large. Please use an image under 1MB.'); setLoading(false); return; }
             const country = document.getElementById('country').value;
             if (!country) { showError('Please select your country.'); setLoading(false); return; }
             if (role === 'provider') {
