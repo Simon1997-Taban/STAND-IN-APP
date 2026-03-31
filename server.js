@@ -7,6 +7,8 @@ const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const compression = require('compression');
 
+const path = require('path');
+
 if (!process.env.JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is not set in .env');
   process.exit(1);
@@ -41,7 +43,7 @@ app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
   // unsafe-eval required by Socket.IO client bundle
   res.setHeader('Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' wss: ws:;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' wss: ws: https:;"
   );
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
@@ -60,9 +62,14 @@ app.use((req, res, next) => {
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static('public', {
-  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 // cache static files in prod
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
 }));
+
+// Root route — serve login page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',      require('./routes/auth'));
