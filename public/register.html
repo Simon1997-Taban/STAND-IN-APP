@@ -184,40 +184,40 @@
                                 <img id="photoPreview" class="photo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='26' r='12' fill='%2398abc6'/%3E%3Cellipse cx='32' cy='52' rx='20' ry='12' fill='%2398abc6'/%3E%3C/svg%3E" alt="Preview">
                                 <div>
                                     <label class="photo-label" for="profilePhoto">Choose Photo</label>
-                                    <input type="file" id="profilePhoto" accept="image/*">
-                                    <div class="help-text" style="margin-top:6px">JPG, PNG or GIF. Required.</div>
+                                    <input type="file" id="profilePhoto" accept="image/*" autocomplete="off">
+                                    <div class="help-text" style="margin-top:6px">JPG, PNG or GIF. Max 1MB.</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="name">Full Name</label>
-                                <input type="text" id="name" required>
+                                <input type="text" id="name" autocomplete="name" required>
                             </div>
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
-                                <input type="tel" id="phone" required>
+                                <input type="tel" id="phone" autocomplete="tel" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" required>
+                            <input type="email" id="email" autocomplete="email" required>
                         </div>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input type="password" id="password" required minlength="8">
+                                <input type="password" id="password" autocomplete="new-password" required minlength="8">
                                 <div class="help-text">Minimum 8 characters.</div>
                             </div>
                             <div class="form-group">
                                 <label for="location">Location</label>
-                                <input type="text" id="location" placeholder="City, area, or region">
+                                <input type="text" id="location" autocomplete="address-level2" placeholder="City, area, or region">
                             </div>
                         </div>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="country">Country</label>
-                                <select id="country" required>
+                                <select id="country" autocomplete="country" required>
                                     <option value="">Select your country...</option>
                                     <option value="UG">🇺🇬 Uganda (UGX)</option>
                                     <option value="KE">🇰🇪 Kenya (KES)</option>
@@ -244,7 +244,7 @@
                         <div class="section-title">Account Type</div>
                         <div class="form-group">
                             <label for="role">I Want To</label>
-                            <select id="role" required>
+                            <select id="role" autocomplete="off" required>
                                 <option value="">Select your primary goal...</option>
                                 <option value="client">Request Services</option>
                                 <option value="provider">Provide Services</option>
@@ -275,13 +275,13 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="hourlyRate">Hourly Rate (USD)</label>
-                                <input type="number" id="hourlyRate" min="5" max="500" step="5">
+                                <input type="number" id="hourlyRate" autocomplete="off" min="5" max="500" step="5">
                                 <div class="help-text">Between $5 and $500.</div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="bio">About Me</label>
-                            <textarea id="bio" placeholder="Tell clients what makes your service worth booking."></textarea>
+                            <textarea id="bio" autocomplete="off" placeholder="Tell clients what makes your service worth booking."></textarea>
                         </div>
                     </div>
 
@@ -367,10 +367,21 @@
         document.getElementById('profilePhoto').addEventListener('change', function () {
             const file = this.files[0];
             if (!file) return;
+            const img = new Image();
             const reader = new FileReader();
             reader.onload = e => {
-                profileImageBase64 = e.target.result;
-                document.getElementById('photoPreview').src = profileImageBase64;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX = 400;
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+                    else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    profileImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('photoPreview').src = profileImageBase64;
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         });
