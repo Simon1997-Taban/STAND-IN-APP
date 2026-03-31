@@ -51,9 +51,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Request timeout — kill requests that hang longer than 30s
+// Request timeout — kill requests that hang longer than 120s
 app.use((req, res, next) => {
-  res.setTimeout(30000, () => {
+  res.setTimeout(120000, () => {
     res.status(503).json({ message: 'Request timed out. Please try again.' });
   });
   next();
@@ -109,11 +109,12 @@ const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/standin-
 
 function connectDB() {
   mongoose.connect(MONGO_URI, {
-    maxPoolSize: 20,
-    minPoolSize: 2,
-    serverSelectionTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-    heartbeatFrequencyMS: 10000
+    maxPoolSize: 10,
+    minPoolSize: 1,
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 120000,
+    heartbeatFrequencyMS: 10000,
+    connectTimeoutMS: 30000
   })
     .then(() => console.log('MongoDB connected'))
     .catch(err => {
