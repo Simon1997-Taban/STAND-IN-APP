@@ -146,6 +146,9 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
 
 const PORT = process.env.PORT || 9000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Worker ${process.pid} listening on port ${PORT}`);
 });
+// Required for Render — prevents 502 on keep-alive connections
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 120000;
