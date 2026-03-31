@@ -1,11 +1,13 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { getCurrencyForCountry } = require('../utils/currency');
 const router = express.Router();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 if (!process.env.JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is not set in .env');
@@ -33,36 +35,9 @@ function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function getTransporter() {
-  const user = process.env.EMAIL_USER || '';
-  if (user.endsWith('@gmail.com')) {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user, pass: process.env.EMAIL_PASS }
-    });
-  }
-  if (user.endsWith('@yahoo.com') || user.endsWith('@ymail.com')) {
-    return nodemailer.createTransport({
-      host: 'smtp.mail.yahoo.com',
-      port: 587,
-      secure: false,
-      auth: { user, pass: process.env.EMAIL_PASS }
-    });
-  }
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: { user, pass: process.env.EMAIL_PASS }
-  });
-}
-
 async function sendOtpEmail(email, name, otp) {
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: `"Stand-In App" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'Stand-In App <onboarding@resend.dev>',
     to: email,
     subject: 'Verify your Stand-In account',
     html: `
