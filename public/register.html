@@ -425,7 +425,8 @@
                 try { data = await res.json(); } catch { data = { message: 'Server error. Please try again.' }; }
                 return { ok: res.ok, status: res.status, data };
             } catch (err) {
-                return { ok: false, status: 0, data: { message: 'Cannot reach the server. Please try again.' } };
+                console.error('safeFetch error:', err);
+                return { ok: false, status: 0, data: { message: 'Cannot reach the server. Please try again. (' + err.message + ')' } };
             }
         }
 
