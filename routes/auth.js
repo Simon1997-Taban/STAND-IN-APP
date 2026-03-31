@@ -169,6 +169,7 @@ router.post('/register', authLimiter, async (req, res) => {
     sendOtpEmail(normalizedEmail, name.trim(), otp).catch(err =>
       console.error('OTP send error:', err.message)
     );
+    console.log(`[OTP] Code ${otp} generated for ${normalizedEmail}`);
   } catch (error) {
     res.status(500).json({ message: 'Registration failed. Please try again.' });
   }
