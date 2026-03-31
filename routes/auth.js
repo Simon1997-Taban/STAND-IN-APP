@@ -142,7 +142,7 @@ router.post('/register', authLimiter, async (req, res) => {
 
     // Send OTP in background after response is sent
     sendOtpEmail(normalizedEmail, name.trim(), otp).catch(err =>
-      console.error('OTP send error:', err.message)
+      console.error('OTP send error:', JSON.stringify(err))
     );
     console.log(`[OTP] Code ${otp} generated for ${normalizedEmail}`);
   } catch (error) {
