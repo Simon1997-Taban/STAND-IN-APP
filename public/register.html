@@ -367,6 +367,12 @@
         document.getElementById('profilePhoto').addEventListener('change', function () {
             const file = this.files[0];
             if (!file) return;
+            // Warn if original file is over 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                showError('Photo is too large. Please choose an image under 5MB.');
+                this.value = '';
+                return;
+            }
             const img = new Image();
             const reader = new FileReader();
             reader.onload = e => {
@@ -380,6 +386,10 @@
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     profileImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     document.getElementById('photoPreview').src = profileImageBase64;
+                    // Show compressed size feedback
+                    const kb = Math.round(profileImageBase64.length * 0.75 / 1024);
+                    document.querySelector('.photo-upload .help-text').textContent = 'Photo ready — ' + kb + 'KB. Looks good!';
+                    document.querySelector('.photo-upload .help-text').style.color = 'var(--success)';
                 };
                 img.src = e.target.result;
             };
