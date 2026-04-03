@@ -41,6 +41,14 @@ const serviceRequestSchema = new mongoose.Schema({
   isOnline: { type: Boolean, default: false },
   
   // Pricing
+  pricingType: { 
+    type: String, 
+    enum: ['hourly', 'daily', 'weekly', 'monthly', 'event'],
+    default: 'hourly'
+  },
+  pricingDuration: { type: Number }, // number of hours/days/weeks/months
+  eventType: { type: String, enum: ['outside_catering', 'in_service_catering', 'both', ''] },
+  refreshments: [{ type: String, enum: ['soda', 'juice', 'water', 'snacks', 'none'] }],
   baseCurrency: { type: String, default: 'USD' },
   paymentCurrency: { type: String, default: 'USD' },
   exchangeRate: { type: Number, default: 1 },

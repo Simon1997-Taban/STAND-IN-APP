@@ -89,7 +89,7 @@ router.get('/admin-count', async (req, res) => {
 // Register — saves user unverified, sends OTP
 router.post('/register', authLimiter, async (req, res) => {
   try {
-    const { name, email, password, phone, role, services, hourlyRate, location, country, bio, profileImage, verifyMethod } = req.body;
+    const { name, email, password, phone, role, services, hourlyRate, pricingType, rates, eventOptions, location, country, bio, profileImage, verifyMethod } = req.body;
 
     if (!name || !email || !password || !phone || !role || !profileImage)
       return res.status(400).json({ message: 'Name, email, password, phone, role, and profile photo are required' });
@@ -127,6 +127,9 @@ router.post('/register', authLimiter, async (req, res) => {
       country: country || 'UG', preferredCurrency, bio, profileImage,
       services: role === 'provider' ? services : undefined,
       hourlyRate: role === 'provider' ? hourlyRate : undefined,
+      pricingType: role === 'provider' ? (pricingType || 'hourly') : undefined,
+      rates: role === 'provider' ? rates : undefined,
+      eventOptions: role === 'provider' ? eventOptions : undefined,
       otp: otpHash, otpExpires,
       emailVerified: false, isActive: false
     });

@@ -21,7 +21,23 @@ const userSchema = new mongoose.Schema({
 
   // Provider specific fields
   services: [{ type: String }],
-  hourlyRate: { type: Number },
+  pricingType: { 
+    type: String, 
+    enum: ['hourly', 'daily', 'weekly', 'monthly', 'event'], 
+    default: 'hourly' 
+  },
+  rates: {
+    hourly:  { type: Number },
+    daily:   { type: Number },
+    weekly:  { type: Number },
+    monthly: { type: Number },
+    event:   { type: Number }
+  },
+  eventOptions: {
+    cateringType: { type: String, enum: ['outside_catering', 'in_service_catering', 'both', ''] },
+    refreshments: [{ type: String, enum: ['soda', 'juice', 'water', 'snacks', 'none'] }]
+  },
+  hourlyRate: { type: Number }, // kept for backwards compatibility
   availability: [{
     day: String,
     startTime: String,

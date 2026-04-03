@@ -272,13 +272,49 @@
                             </div>
                             <input type="hidden" id="selectedServices">
                         </div>
-                        <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="pricingType">Pricing Type</label>
+                            <select id="pricingType" autocomplete="off" onchange="onPricingTypeChange()">
+                                <option value="hourly">Hourly</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="event">Event Based</option>
+                            </select>
+                        </div>
+
+                        <div class="form-grid" id="rateFields">
                             <div class="form-group">
-                                <label for="hourlyRate">Hourly Rate (USD)</label>
-                                <input type="number" id="hourlyRate" autocomplete="off" min="5" max="500" step="5">
-                                <div class="help-text">Between $5 and $500.</div>
+                                <label for="rateAmount">Rate (USD)</label>
+                                <input type="number" id="rateAmount" autocomplete="off" min="1" step="1" placeholder="e.g. 20">
+                                <div class="help-text" id="rateHint">Amount charged per hour.</div>
                             </div>
                         </div>
+
+                        <div id="eventFields" class="hidden">
+                            <div class="form-group">
+                                <label for="cateringType">Catering Type</label>
+                                <select id="cateringType" autocomplete="off">
+                                    <option value="">Not applicable</option>
+                                    <option value="outside_catering">Outside Catering</option>
+                                    <option value="in_service_catering">In-Service Catering</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Refreshments Included</label>
+                                <div class="service-tags" id="refreshmentTags">
+                                    <div class="service-tag" data-ref="soda">🥤 Soda</div>
+                                    <div class="service-tag" data-ref="juice">🧃 Juice</div>
+                                    <div class="service-tag" data-ref="water">💧 Water</div>
+                                    <div class="service-tag" data-ref="snacks">🍿 Snacks</div>
+                                    <div class="service-tag" data-ref="none">None</div>
+                                </div>
+                                <input type="hidden" id="selectedRefreshments">
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="bio">About Me</label>
                             <textarea id="bio" autocomplete="off" placeholder="Tell clients what makes your service worth booking."></textarea>
@@ -347,6 +383,32 @@
             document.getElementById('errorMessage').style.display = 'none';
             document.querySelector('.brand-copy p').textContent = 'Check your email for the verification code.';
         }
+
+        const RATE_HINTS = {
+            hourly: 'Amount charged per hour.',
+            daily: 'Amount charged per full day.',
+            weekly: 'Amount charged per week.',
+            monthly: 'Amount charged per month.',
+            event: 'Flat rate charged per event.'
+        };
+
+        function onPricingTypeChange() {
+            const type = document.getElementById('pricingType').value;
+            document.getElementById('rateHint').textContent = RATE_HINTS[type];
+            const eventFields = document.getElementById('eventFields');
+            if (type === 'event') eventFields.classList.remove('hidden');
+            else eventFields.classList.add('hidden');
+        }
+
+        const selectedRefreshments = new Set();
+        document.querySelectorAll('#refreshmentTags .service-tag').forEach(tag => {
+            tag.addEventListener('click', function () {
+                const r = this.dataset.ref;
+                if (selectedRefreshments.has(r)) { selectedRefreshments.delete(r); this.classList.remove('selected'); }
+                else { selectedRefreshments.add(r); this.classList.add('selected'); }
+                document.getElementById('selectedRefreshments').value = Array.from(selectedRefreshments).join(',');
+            });
+        });
 
         const COUNTRY_CURRENCY = {
           UG:'UGX', KE:'KES', TZ:'TZS', RW:'RWF', BI:'BIF', SS:'SSP',
@@ -453,9 +515,8 @@
             if (!country) { showError('Please select your country.'); setLoading(false); return; }
             if (role === 'provider') {
                 if (selectedServices.size === 0) { showError('Please select at least one service.'); setLoading(false); return; }
-                if (!document.getElementById('hourlyRate').value || document.getElementById('hourlyRate').value < 5) {
-                    showError('Please set a valid hourly rate (minimum $5).'); setLoading(false); return;
-                }
+                const rateAmount = parseFloat(document.getElementById('rateAmount').value);
+                if (!rateAmount || rateAmount < 1) { showError('Please set a valid rate (minimum $1).'); setLoading(false); return; }
             }
 
             pendingEmail = document.getElementById('email').value.trim();
@@ -471,9 +532,19 @@
                 country, role, profileImage: profileImageBase64
             };
             if (role === 'provider') {
+                const pricingType = document.getElementById('pricingType').value;
+                const rateAmount = parseFloat(document.getElementById('rateAmount').value);
                 body.services = Array.from(selectedServices);
-                body.hourlyRate = parseFloat(document.getElementById('hourlyRate').value);
+                body.pricingType = pricingType;
+                body.rates = { [pricingType]: rateAmount };
+                body.hourlyRate = pricingType === 'hourly' ? rateAmount : undefined;
                 body.bio = document.getElementById('bio').value;
+                if (pricingType === 'event') {
+                    body.eventOptions = {
+                        cateringType: document.getElementById('cateringType').value,
+                        refreshments: Array.from(selectedRefreshments)
+                    };
+                }
             }
 
             const { ok, data } = await safeFetch('/api/auth/register', {
