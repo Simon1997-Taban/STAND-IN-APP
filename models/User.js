@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema({
     type: { type: String },
     details: { type: Object }
   }],
+  paymentPin: { type: String }, // bcrypt hashed 4-digit PIN for payment confirmation
 
   isVerified: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true }

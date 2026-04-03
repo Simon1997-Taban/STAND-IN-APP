@@ -229,6 +229,23 @@
 
         </section>
 
+        <section class="surface" id="pinSection" style="display:none;">
+            <span class="pill">Security</span>
+            <h2>Payment PIN</h2>
+            <p>Set a 4-digit PIN to confirm payments when your provider requests them. Keep this PIN private.</p>
+            <form id="pinForm" style="margin-top:20px;max-width:320px;">
+                <div class="form-group">
+                    <label for="pinInput">4-Digit PIN</label>
+                    <input type="password" id="pinInput" maxlength="4" inputmode="numeric" autocomplete="new-password" placeholder="Enter 4-digit PIN">
+                </div>
+                <div class="form-group">
+                    <label for="pinConfirm">Confirm PIN</label>
+                    <input type="password" id="pinConfirm" maxlength="4" inputmode="numeric" autocomplete="new-password" placeholder="Repeat PIN">
+                </div>
+                <button type="submit" class="btn"><span class="btn-text">Set PIN</span><span class="btn-loading loading" style="display:none;"></span></button>
+            </form>
+        </section>
+
         <section class="surface">
             <h2>Your Payment Methods</h2>
             <div id="paymentMethodsList" class="methods-list">
@@ -250,8 +267,14 @@
         });
 
         function checkAuth() {
-            if (!localStorage.getItem('token') || !localStorage.getItem('user')) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!localStorage.getItem('token') || !user.role) {
                 window.location.href = 'login.html';
+                return;
+            }
+            // Show PIN section only for clients
+            if (user.role === 'client') {
+                document.getElementById('pinSection').style.display = 'block';
             }
         }
 
@@ -267,6 +290,27 @@
             document.getElementById('bankForm').addEventListener('submit', handleBankSubmit);
             document.getElementById('mobileForm').addEventListener('submit', handleMobileSubmit);
             document.getElementById('digitalForm').addEventListener('submit', handleDigitalSubmit);
+            document.getElementById('pinForm').addEventListener('submit', handlePinSubmit);
+        }
+
+        async function handlePinSubmit(e) {
+            e.preventDefault();
+            const pin = document.getElementById('pinInput').value;
+            const confirm = document.getElementById('pinConfirm').value;
+            if (!/^\d{4}$/.test(pin)) { showAlert('PIN must be exactly 4 digits.', 'error'); return; }
+            if (pin !== confirm) { showAlert('PINs do not match.', 'error'); return; }
+            setFormLoading('pinForm', true);
+            try {
+                const res = await fetch('/api/payments/set-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify({ pin })
+                });
+                const data = await res.json();
+                showAlert(res.ok ? 'Payment PIN set successfully.' : (data.message || 'Failed to set PIN.'), res.ok ? 'success' : 'error');
+                if (res.ok) document.getElementById('pinForm').reset();
+            } catch { showAlert('Network error. Please try again.', 'error'); }
+            finally { setFormLoading('pinForm', false); }
         }
 
         async function handleBankSubmit(event) {

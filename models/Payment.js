@@ -83,6 +83,12 @@ const transactionSchema = new mongoose.Schema({
     required: true
   },
 
+  // Payment initiation tracking
+  initiatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // provider who requested payment
+  paymentRequestedAt: { type: Date },
+  clientAlerted: { type: Boolean, default: false },
+  clientPin: { type: String }, // not stored — PIN verified at confirm time
+
   // Mobile money confirmation code (sent to client phone)
   mobileConfirmCode: { type: String },
   mobileConfirmExpires: { type: Date },
