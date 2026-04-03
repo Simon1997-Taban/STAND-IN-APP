@@ -107,8 +107,8 @@ router.post('/register', authLimiter, async (req, res) => {
 
     if (role === 'admin') {
       const adminCount = await User.countDocuments({ role: 'admin' });
-      if (adminCount >= 2)
-        return res.status(400).json({ message: 'Admin registration is limited to 2 users' });
+      if (adminCount >= 1)
+        return res.status(400).json({ message: 'Admin registration is closed. Only one admin is allowed.' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
