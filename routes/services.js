@@ -14,7 +14,11 @@ function pickProfilePayload(user) {
     bio: user.bio,
     profileImage: user.profileImage,
     services: user.services,
+    serviceDetails: user.serviceDetails,
     hourlyRate: user.hourlyRate,
+    pricingType: user.pricingType,
+    rates: user.rates,
+    eventOptions: user.eventOptions,
     rating: user.rating,
     totalReviews: user.totalReviews,
     isVerified: user.isVerified,
@@ -81,8 +85,7 @@ router.put('/profile', auth, async (req, res) => {
     const allowedFields = ['name', 'phone', 'location', 'bio', 'profileImage'];
 
     if (req.user.role === 'provider') {
-      allowedFields.push('hourlyRate');
-      allowedFields.push('services');
+      allowedFields.push('hourlyRate', 'services', 'serviceDetails', 'pricingType', 'rates', 'eventOptions');
     }
 
     const updates = {};

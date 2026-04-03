@@ -20,6 +20,10 @@ const tabMeta = {
         title: 'Payment workspace',
         copy: 'Check value, pending items, and transaction history without the rest of the dashboard crowding the view.'
     },
+    invoices: {
+        title: 'Invoice workspace',
+        copy: 'View and print invoices, receipts and performance invoices for all your completed services.'
+    },
     location: {
         title: 'Location workspace',
         copy: 'Open a dedicated location tab whenever you need address visibility or live sharing details.'
@@ -292,7 +296,8 @@ async function loadDashboard() {
         loadRequests(),
         loadProfile(),
         loadTransactions(),
-        loadLocations()
+        loadLocations(),
+        loadInvoices()
     ]);
 }
 
@@ -302,16 +307,14 @@ async function loadStats() {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
-        if (!res.ok) {
-            return;
-        }
-
-        const requests = await res.json();
-        const activeCount = requests.filter(function (request) {
-            return ['pending', 'accepted', 'in-progress'].includes(request.status);
+        if (!res.ok) return;
+        const data = await res.json();
+        const requests = data.requests || data; // handle paginated response
+        const activeCount = requests.filter(function (r) {
+            return ['pending', 'accepted', 'in-progress'].includes(r.status);
         }).length;
-        const completedCount = requests.filter(function (request) {
-            return request.status === 'completed';
+        const completedCount = requests.filter(function (r) {
+            return r.status === 'completed';
         }).length;
 
         document.getElementById('totalRequests').textContent = requests.length;
@@ -321,13 +324,10 @@ async function loadStats() {
 
         if (currentUser.role === 'provider') {
             const earnings = requests
-                .filter(function (request) {
-                    return request.status === 'completed' && request.paymentStatus === 'paid';
-                })
-                .reduce(function (sum, request) {
-                    return sum + ((request.baseTotalAmount || request.totalAmount || 0) - (request.baseAdminCommission || request.adminCommission || 0));
+                .filter(function (r) { return r.status === 'completed' && r.paymentStatus === 'paid'; })
+                .reduce(function (sum, r) {
+                    return sum + ((r.baseTotalAmount || r.totalAmount || 0) - (r.baseAdminCommission || r.adminCommission || 0));
                 }, 0);
-
             document.getElementById('totalEarnings').textContent = formatMoney(earnings);
         }
     } catch (error) {
@@ -387,12 +387,15 @@ function displayServices(providers) {
     grid.innerHTML = providers.map(function (provider) {
         const services = Array.isArray(provider.services) && provider.services.length ? provider.services : ['general'];
         const verifiedBadge = provider.isVerified ? '<span class="surface-tag">Verified provider</span>' : '<span class="surface-tag">Provider profile</span>';
+        const pricingType = provider.pricingType || 'hourly';
+        const rate = provider.rates && provider.rates[pricingType] ? provider.rates[pricingType] : (provider.hourlyRate || 0);
+        const rateLabel = { hourly:'/ hr', daily:'/ day', weekly:'/ week', monthly:'/ month', event:'/ event' }[pricingType] || '/ hr';
 
         return `
             <article class="service-card">
                 <div class="service-card-head">
                     ${verifiedBadge}
-                    <strong>${formatMoney(provider.hourlyRate, provider.hourlyRateCurrency || 'USD')} / hour</strong>
+                    <strong>${formatMoney(rate, 'USD')} ${rateLabel}</strong>
                 </div>
                 <div class="service-owner">
                     ${getAvatarMarkup(provider.name, provider.profileImage, '')}
@@ -520,7 +523,8 @@ async function loadRequests() {
         });
 
         if (res.ok) {
-            displayRequests(await res.json());
+            const data = await res.json();
+            displayRequests(data.requests || data);
         }
     } catch (error) {
         console.error(error);
@@ -610,6 +614,20 @@ function getRequestActions(request) {
     if (currentUser.role === 'provider' && request.status === 'in-progress') {
         return `
             <button class="btn-success" onclick="updateRequestStatus('${request._id}', 'completed')">Mark complete</button>
+            <button class="btn-secondary" onclick="openChat('${request.chatRoom}')">Chat</button>
+        `;
+    }
+
+    if (currentUser.role === 'provider' && request.status === 'completed' && request.paymentStatus === 'pending') {
+        return `
+            <button class="btn" onclick="requestPayment('${request._id}')">Request Payment</button>
+            <button class="btn-secondary" onclick="openChat('${request.chatRoom}')">Chat</button>
+        `;
+    }
+
+    if (currentUser.role === 'client' && request.paymentStatus === 'processing') {
+        return `
+            <button class="btn" onclick="confirmPaymentPin('${request._id}')">Confirm Payment</button>
             <button class="btn-secondary" onclick="openChat('${request.chatRoom}')">Chat</button>
         `;
     }
@@ -1076,6 +1094,92 @@ async function updateRequestStatus(requestId, status) {
 
 function openChat(roomId) {
     window.open(`chat.html?room=${roomId}`, '_blank', 'width=420,height=620');
+}
+
+async function requestPayment(requestId) {
+    try {
+        const res = await fetch(`/api/payments/request/${requestId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Payment request sent to client. They will be notified to confirm.\n\nAmount: ' + formatMoney(data.breakdown.totalAmount, data.breakdown.currency));
+            loadRequests();
+            loadInvoices();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch { alert('Network error.'); }
+}
+
+async function confirmPaymentPin(requestId) {
+    // Find the pending transaction for this request
+    try {
+        const txRes = await fetch('/api/payments/transactions', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const transactions = txRes.ok ? await txRes.json() : [];
+        const tx = transactions.find(t => t.serviceRequest && (t.serviceRequest._id || t.serviceRequest) === requestId && t.status === 'pending');
+        if (!tx) { alert('No pending payment found for this request.'); return; }
+
+        const pin = prompt('Enter your 4-digit payment PIN to confirm:');
+        if (!pin) return;
+
+        const res = await fetch(`/api/payments/confirm-pin/${tx._id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Payment confirmed! ✓\n\nTotal: ' + formatMoney(data.breakdown.totalAmount, data.breakdown.currency) + '\nProvider receives: ' + formatMoney(data.breakdown.providerReceives, data.breakdown.currency));
+            loadRequests();
+            loadStats();
+            loadTransactions();
+            loadInvoices();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch { alert('Network error.'); }
+}
+
+async function loadInvoices() {
+    try {
+        const res = await fetch('/api/invoices', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) displayInvoices(await res.json());
+    } catch (e) { console.error(e); }
+}
+
+function displayInvoices(invoices) {
+    const container = document.getElementById('invoicesList');
+    if (!container) return;
+    if (!invoices.length) {
+        container.innerHTML = '<div class="empty-state"><h3>No invoices yet</h3><p>Invoices and receipts will appear here after payment activity.</p></div>';
+        return;
+    }
+    const typeColors = { invoice: '#41e4de', receipt: '#69f1c5', performance: '#f6c177' };
+    container.innerHTML = invoices.map(inv => `
+        <article class="transaction-card">
+            <div class="card-row">
+                <div>
+                    <h4>${escapeHtml(inv.invoiceNumber)}</h4>
+                    <div class="meta-copy">
+                        <span>${escapeHtml(inv.serviceTitle || 'Service')}</span>
+                        <span>Date: ${formatDate(inv.issuedAt)}</span>
+                        <span style="color:${typeColors[inv.type] || '#41e4de'};font-weight:700;text-transform:uppercase;">${escapeHtml(inv.type)}</span>
+                    </div>
+                </div>
+                <span class="status-badge status-${inv.status === 'paid' ? 'completed' : 'pending'}">${escapeHtml(inv.status.toUpperCase())}</span>
+            </div>
+            <div class="price-strip">
+                <strong>${formatMoney(inv.totalAmount, inv.currency)}</strong>
+                <a href="/api/invoices/${inv._id}?format=html" target="_blank" class="btn-secondary" style="padding:8px 16px;border-radius:999px;text-decoration:none;font-size:13px;">View / Print</a>
+            </div>
+        </article>
+    `).join('');
 }
 
 function logout() {

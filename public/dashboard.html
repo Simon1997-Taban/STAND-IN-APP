@@ -21,6 +21,7 @@
             <button type="button" class="nav-tab" data-tab="services" onclick="showDashboardTab('services')" id="servicesTab">Services</button>
             <button type="button" class="nav-tab" data-tab="requests" onclick="showDashboardTab('requests')">Requests</button>
             <button type="button" class="nav-tab" data-tab="payments" onclick="showDashboardTab('payments')">Payments</button>
+            <button type="button" class="nav-tab" data-tab="invoices" onclick="showDashboardTab('invoices')">Invoices</button>
             <button type="button" class="nav-tab" data-tab="location" onclick="showDashboardTab('location')">Location</button>
             <button type="button" class="nav-tab" data-tab="profile" onclick="showDashboardTab('profile')">Profile</button>
         </nav>
@@ -178,6 +179,21 @@
                         <div class="empty-state">
                             <h3>No transactions yet</h3>
                             <p>Your payment history will appear here once requests start moving through the platform.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tab-panel" id="invoicesPanel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Invoices &amp; Receipts</h3>
+                            <p>View, print and download invoices, receipts and performance invoices for all your services.</p>
+                        </div>
+                    </div>
+                    <div class="panel-list" id="invoicesList">
+                        <div class="empty-state">
+                            <h3>No invoices yet</h3>
+                            <p>Invoices and receipts will appear here after payment activity.</p>
                         </div>
                     </div>
                 </section>

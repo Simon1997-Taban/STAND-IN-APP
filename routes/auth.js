@@ -241,6 +241,47 @@ router.post('/resend-otp', otpLimiter, async (req, res) => {
   }
 });
 
+// Password reset — request
+router.post('/forgot-password', authLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    // Always respond OK to prevent email enumeration
+    res.json({ message: 'If an account exists with that email, a reset code has been sent.' });
+    if (!user) return;
+    const otp = generateOtp();
+    user.otp = await bcrypt.hash(otp, 10);
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+    sendOtpEmail(user.email, user.name, otp).catch(err => console.error('Reset email error:', err.message));
+    console.log(`[RESET] Code ${otp} for ${user.email}`);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not process request. Please try again.' });
+  }
+});
+
+// Password reset — confirm with OTP and new password
+router.post('/reset-password', authLimiter, async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) return res.status(400).json({ message: 'Email, code and new password are required' });
+    if (newPassword.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user || !user.otp || user.otpExpires < new Date())
+      return res.status(400).json({ message: 'Reset code has expired. Please request a new one.' });
+    const valid = await bcrypt.compare(otp.trim(), user.otp);
+    if (!valid) return res.status(400).json({ message: 'Incorrect reset code.' });
+    user.password = newPassword;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+    res.json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Reset failed. Please try again.' });
+  }
+});
+
 // Login
 router.post('/login', authLimiter, async (req, res) => {
   try {
