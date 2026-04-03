@@ -53,6 +53,9 @@ async function sendOtpEmail(email, name, otp) {
 
 async function sendOtpSms(phone, otp) {
   const normalised = phone.replace(/[\s\-()]/g, '');
+  // Ensure + prefix for international format
+  const formatted = normalised.startsWith('+') ? normalised : '+' + normalised;
+  console.log(`[SMS] Attempting to send to: ${formatted}`);
 
   // Twilio if configured
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE) {
@@ -60,8 +63,9 @@ async function sendOtpSms(phone, otp) {
     await twilio.messages.create({
       body: `Your Stand-In verification code is: ${otp}. Expires in 10 minutes.`,
       from: process.env.TWILIO_PHONE,
-      to: normalised
+      to: formatted
     });
+    console.log('[SMS] Sent via Twilio');
     return;
   }
 
@@ -72,21 +76,21 @@ async function sendOtpSms(phone, otp) {
         apiKey: process.env.AT_API_KEY,
         username: process.env.AT_USERNAME
       });
+      console.log(`[SMS] Using AT username: ${process.env.AT_USERNAME}`);
       const result = await AT.SMS.send({
-        to: [normalised],
+        to: [formatted],
         message: `Your Stand-In verification code is: ${otp}. Expires in 10 minutes.`,
         from: process.env.AT_SENDER_ID || undefined
       });
-      console.log('[SMS] Sent:', JSON.stringify(result));
+      console.log('[SMS] AT result:', JSON.stringify(result));
       return;
     } catch (atErr) {
-      console.error('[SMS] Africa\'s Talking error:', atErr.message);
+      console.error('[SMS] AT error:', atErr.message);
       throw atErr;
     }
   }
 
-  // Dev fallback — log to console
-  console.warn(`[DEV] SMS OTP for ${normalised}: ${otp}`);
+  console.warn(`[DEV] SMS OTP for ${formatted}: ${otp}`);
   if (process.env.NODE_ENV === 'production') {
     throw new Error('No SMS service configured.');
   }
@@ -153,18 +157,22 @@ router.post('/register', authLimiter, async (req, res) => {
 
     await user.save();
 
-    // Respond immediately — don't wait for email to avoid timeout
+    // Respond immediately — don't wait for OTP to avoid timeout
     res.status(201).json({
-      message: 'Account created. Check your email for a 6-digit verification code.',
+      message: method === 'phone'
+        ? 'Account created. Check your phone for a 6-digit verification code.'
+        : 'Account created. Check your email for a 6-digit verification code.',
       userId: user._id,
       verifyMethod: method
     });
 
-    // Send OTP in background after response is sent
-    sendOtpEmail(normalizedEmail, name.trim(), otp).catch(err =>
-      console.error('OTP send error:', JSON.stringify(err))
-    );
-    console.log(`[OTP] Code ${otp} generated for ${normalizedEmail}`);
+    // Send OTP in background
+    if (method === 'phone') {
+      sendOtpSms(phone.trim(), otp).catch(err => console.error('OTP SMS error:', err.message));
+    } else {
+      sendOtpEmail(normalizedEmail, name.trim(), otp).catch(err => console.error('OTP email error:', JSON.stringify(err)));
+    }
+    console.log(`[OTP] Code ${otp} for ${normalizedEmail} via ${method}`);
   } catch (error) {
     res.status(500).json({ message: 'Registration failed. Please try again.' });
   }
