@@ -255,23 +255,99 @@
 
                     <div id="providerFields" class="form-section hidden">
                         <div class="section-title">Provider Profile</div>
+
                         <div class="form-group">
-                            <label>Services I Can Provide</label>
-                            <div class="help-text">Select every service category you want clients to see.</div>
-                            <div class="service-tags">
-                                <div class="service-tag" data-service="tutoring">Tutoring</div>
-                                <div class="service-tag" data-service="companionship">Companionship</div>
-                                <div class="service-tag" data-service="counseling">Counseling</div>
-                                <div class="service-tag" data-service="fitness">Fitness</div>
-                                <div class="service-tag" data-service="cooking">Cooking</div>
-                                <div class="service-tag" data-service="walking">Walking</div>
-                                <div class="service-tag" data-service="dancing">Dancing</div>
-                                <div class="service-tag" data-service="conversation">Conversation</div>
-                                <div class="service-tag" data-service="shopping">Shopping</div>
-                                <div class="service-tag" data-service="events">Events</div>
+                            <label for="serviceCategory">Service Category</label>
+                            <select id="serviceCategory" autocomplete="off" onchange="onCategoryChange()">
+                                <option value="">Select a service category...</option>
+                                <optgroup label="Education">
+                                    <option value="tutoring">📚 Tutoring / Teaching</option>
+                                    <option value="language">🗣️ Language Lessons</option>
+                                    <option value="music_lessons">🎵 Music Lessons</option>
+                                    <option value="art_lessons">🎨 Art Lessons</option>
+                                    <option value="driving_lessons">🚗 Driving Lessons</option>
+                                    <option value="computer_training">💻 Computer Training</option>
+                                </optgroup>
+                                <optgroup label="Social &amp; Companionship">
+                                    <option value="companionship">👥 Companionship</option>
+                                    <option value="event_companion">🎉 Event Companion</option>
+                                    <option value="travel_companion">✈️ Travel Companion</option>
+                                    <option value="shopping_companion">🛍️ Shopping Companion</option>
+                                    <option value="conversation">💬 Conversation Partner</option>
+                                    <option value="dating_coach">💝 Dating Coach</option>
+                                </optgroup>
+                                <optgroup label="Health &amp; Wellness">
+                                    <option value="fitness">💪 Fitness Partner</option>
+                                    <option value="yoga">🧘 Yoga Instructor</option>
+                                    <option value="personal_trainer">🏋️ Personal Trainer</option>
+                                    <option value="nutritionist">🥗 Nutritionist</option>
+                                    <option value="counseling">💬 Counseling / Listening</option>
+                                    <option value="life_coach">🌟 Life Coach</option>
+                                    <option value="massage">💆 Massage Therapist</option>
+                                </optgroup>
+                                <optgroup label="Home &amp; Lifestyle">
+                                    <option value="cooking">👨‍🍳 Cooking Partner</option>
+                                    <option value="catering">🍽️ Catering</option>
+                                    <option value="cleaning">🧹 Cleaning Service</option>
+                                    <option value="laundry">👕 Laundry Service</option>
+                                    <option value="gardening">🌱 Gardening</option>
+                                    <option value="handyman">🔧 Handyman</option>
+                                    <option value="interior_design">🏠 Interior Design</option>
+                                </optgroup>
+                                <optgroup label="Care &amp; Support">
+                                    <option value="childcare">👶 Childcare / Babysitting</option>
+                                    <option value="elderly_care">👴 Elderly Care</option>
+                                    <option value="pet_care">🐾 Pet Care / Dog Walking</option>
+                                    <option value="disability_support">♿ Disability Support</option>
+                                    <option value="errand_runner">📦 Errand Runner</option>
+                                </optgroup>
+                                <optgroup label="Creative &amp; Entertainment">
+                                    <option value="dancing">💃 Dancing Partner</option>
+                                    <option value="photography">📸 Photography</option>
+                                    <option value="videography">🎥 Videography</option>
+                                    <option value="dj">🎧 DJ Services</option>
+                                    <option value="mc">🎤 MC / Host</option>
+                                    <option value="makeup">💄 Makeup Artist</option>
+                                    <option value="hair">💇 Hair Stylist</option>
+                                </optgroup>
+                                <optgroup label="Business &amp; Professional">
+                                    <option value="virtual_assistant">🖥️ Virtual Assistant</option>
+                                    <option value="translator">🌐 Translator / Interpreter</option>
+                                    <option value="graphic_design">🎨 Graphic Design</option>
+                                    <option value="writing">✍️ Writing / Editing</option>
+                                    <option value="accounting">📊 Accounting / Bookkeeping</option>
+                                    <option value="legal_advice">⚖️ Legal Advice</option>
+                                    <option value="research">🔍 Research Assistant</option>
+                                </optgroup>
+                                <optgroup label="Transport &amp; Outdoor">
+                                    <option value="walking">🚶 Walking Partner</option>
+                                    <option value="driver">🚘 Personal Driver</option>
+                                    <option value="tour_guide">🗺️ Tour Guide</option>
+                                    <option value="moving_help">📦 Moving / Packing Help</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Sub-options per category -->
+                        <div id="subOptionsContainer" class="hidden">
+                            <div class="form-group">
+                                <label id="subOptionsLabel">Specialization</label>
+                                <div class="service-tags" id="subOptionsTags"></div>
+                                <input type="hidden" id="selectedSubOptions">
                             </div>
+                        </div>
+
+                        <!-- Selected services list -->
+                        <div class="form-group" id="selectedServicesDisplay" style="display:none">
+                            <label>Selected Services</label>
+                            <div id="selectedServicesList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
                             <input type="hidden" id="selectedServices">
                         </div>
+
+                        <button type="button" id="addServiceBtn" class="hidden"
+                            style="padding:10px 20px;border-radius:999px;border:1px solid rgba(65,228,222,0.4);background:rgba(65,228,222,0.1);color:var(--cyan);font-size:13px;cursor:pointer;margin-bottom:14px;">
+                            + Add This Service
+                        </button>
 
                         <div class="form-group">
                             <label for="pricingType">Pricing Type</label>
@@ -382,6 +458,128 @@
             document.getElementById('footerRow').style.display = 'none';
             document.getElementById('errorMessage').style.display = 'none';
             document.querySelector('.brand-copy p').textContent = 'Check your email for the verification code.';
+        }
+
+        // Service category sub-options map
+        const SERVICE_SUB_OPTIONS = {
+            tutoring:          { label: 'Subjects', options: ['Mathematics','English','Sciences','History','Geography','Computer Science','Economics','Art','Music','Other'] },
+            language:          { label: 'Languages', options: ['English','French','Spanish','Arabic','Swahili','Luganda','Chinese','German','Other'] },
+            music_lessons:     { label: 'Instruments', options: ['Guitar','Piano','Drums','Violin','Vocals','Bass','Flute','Other'] },
+            art_lessons:       { label: 'Art Type', options: ['Drawing','Painting','Sculpture','Photography','Digital Art','Other'] },
+            driving_lessons:   { label: 'Vehicle Type', options: ['Car','Motorcycle','Truck','Bus','Other'] },
+            computer_training: { label: 'Topics', options: ['Microsoft Office','Graphic Design','Programming','Internet Basics','Data Entry','Other'] },
+            companionship:     { label: 'Type', options: ['Social Events','Dinner Date','Movie Night','Park Walk','General Company','Other'] },
+            event_companion:   { label: 'Event Type', options: ['Wedding','Birthday','Corporate','Graduation','Concert','Sports Event','Other'] },
+            travel_companion:  { label: 'Travel Type', options: ['Local Trip','International','Road Trip','Safari','City Tour','Other'] },
+            shopping_companion:{ label: 'Shopping Type', options: ['Grocery','Fashion','Electronics','Market','Mall','Other'] },
+            conversation:      { label: 'Topic', options: ['General Chat','Language Practice','Business Talk','Emotional Support','Other'] },
+            dating_coach:      { label: 'Focus', options: ['Confidence Building','Profile Review','Date Preparation','Relationship Advice','Other'] },
+            fitness:           { label: 'Activity', options: ['Running','Gym','Cycling','Swimming','Hiking','Sports','Other'] },
+            yoga:              { label: 'Style', options: ['Hatha','Vinyasa','Ashtanga','Restorative','Meditation','Other'] },
+            personal_trainer:  { label: 'Focus', options: ['Weight Loss','Muscle Gain','Cardio','Flexibility','Rehabilitation','Other'] },
+            nutritionist:      { label: 'Focus', options: ['Weight Management','Sports Nutrition','Meal Planning','Dietary Advice','Other'] },
+            counseling:        { label: 'Type', options: ['General Listening','Stress Management','Grief Support','Relationship Issues','Career Advice','Other'] },
+            life_coach:        { label: 'Focus', options: ['Career','Relationships','Personal Growth','Productivity','Other'] },
+            massage:           { label: 'Type', options: ['Swedish','Deep Tissue','Sports','Relaxation','Foot Massage','Other'] },
+            cooking:           { label: 'Cuisine', options: ['Local/African','Italian','Chinese','Indian','Continental','Baking','Other'] },
+            catering:          { label: 'Catering Type', options: ['Outside Catering','In-Service Catering','Buffet','Cocktail','BBQ','Other'] },
+            cleaning:          { label: 'Type', options: ['Home Cleaning','Office Cleaning','Deep Cleaning','After-Event','Carpet Cleaning','Other'] },
+            laundry:           { label: 'Type', options: ['Wash & Iron','Dry Cleaning','Folding Only','Pickup & Delivery','Other'] },
+            gardening:         { label: 'Type', options: ['Lawn Mowing','Planting','Pruning','Landscaping','Watering','Other'] },
+            handyman:          { label: 'Skills', options: ['Plumbing','Electrical','Painting','Carpentry','Tiling','General Repairs','Other'] },
+            interior_design:   { label: 'Focus', options: ['Home Decor','Office Setup','Event Decoration','Furniture Arrangement','Other'] },
+            childcare:         { label: 'Type', options: ['Babysitting','After School Care','Full Day Care','Homework Help','Other'] },
+            elderly_care:      { label: 'Type', options: ['Companionship','Medical Assistance','Mobility Support','Meal Preparation','Other'] },
+            pet_care:          { label: 'Type', options: ['Dog Walking','Pet Sitting','Grooming','Feeding','Vet Escort','Other'] },
+            disability_support:{ label: 'Type', options: ['Mobility Assistance','Communication Support','Daily Living','Therapy Support','Other'] },
+            errand_runner:     { label: 'Errands', options: ['Shopping','Bill Payment','Document Delivery','Bank Runs','Other'] },
+            dancing:           { label: 'Dance Style', options: ['Salsa','Hip Hop','Ballroom','Traditional','Contemporary','Afrobeat','Other'] },
+            photography:       { label: 'Type', options: ['Portrait','Events','Wedding','Product','Nature','Other'] },
+            videography:       { label: 'Type', options: ['Events','Wedding','Corporate','Music Video','Documentary','Other'] },
+            dj:                { label: 'Event Type', options: ['Wedding','Club','Corporate','Birthday','Outdoor','Other'] },
+            mc:                { label: 'Event Type', options: ['Wedding','Corporate','Birthday','Concert','Sports','Other'] },
+            makeup:            { label: 'Type', options: ['Bridal','Events','Natural Look','Editorial','Special Effects','Other'] },
+            hair:              { label: 'Type', options: ['Braiding','Natural Hair','Relaxer','Weaves','Dreadlocks','Barbing','Other'] },
+            virtual_assistant: { label: 'Tasks', options: ['Email Management','Scheduling','Data Entry','Research','Social Media','Other'] },
+            translator:        { label: 'Languages', options: ['English-Swahili','English-French','English-Arabic','English-Luganda','Other'] },
+            graphic_design:    { label: 'Type', options: ['Logo Design','Flyers','Social Media','Branding','UI/UX','Other'] },
+            writing:           { label: 'Type', options: ['Blog Posts','Academic','Copywriting','Proofreading','CV Writing','Other'] },
+            accounting:        { label: 'Type', options: ['Bookkeeping','Tax Filing','Payroll','Financial Reports','Other'] },
+            legal_advice:      { label: 'Area', options: ['Contracts','Family Law','Business Law','Property','Other'] },
+            research:          { label: 'Type', options: ['Academic','Market Research','Data Analysis','Literature Review','Other'] },
+            walking:           { label: 'Type', options: ['Morning Walk','Evening Walk','Nature Trail','City Walk','Other'] },
+            driver:            { label: 'Type', options: ['Airport Transfer','Daily Commute','Long Distance','Event Driver','Other'] },
+            tour_guide:        { label: 'Type', options: ['City Tour','Nature Tour','Cultural Tour','Historical Sites','Other'] },
+            moving_help:       { label: 'Type', options: ['Home Moving','Office Moving','Packing Only','Loading/Unloading','Other'] }
+        };
+
+        const addedServices = []; // [{category, subOptions}]
+
+        function onCategoryChange() {
+            const cat = document.getElementById('serviceCategory').value;
+            const container = document.getElementById('subOptionsContainer');
+            const tagsEl = document.getElementById('subOptionsTags');
+            const addBtn = document.getElementById('addServiceBtn');
+            if (!cat || !SERVICE_SUB_OPTIONS[cat]) {
+                container.classList.add('hidden');
+                addBtn.classList.add('hidden');
+                return;
+            }
+            const { label, options } = SERVICE_SUB_OPTIONS[cat];
+            document.getElementById('subOptionsLabel').textContent = label;
+            tagsEl.innerHTML = options.map(o =>
+                `<div class="service-tag" data-sub="${o}">${o}</div>`
+            ).join('');
+            document.getElementById('selectedSubOptions').value = '';
+            // re-attach click handlers
+            tagsEl.querySelectorAll('.service-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    const selected = Array.from(tagsEl.querySelectorAll('.service-tag.selected')).map(t => t.dataset.sub);
+                    document.getElementById('selectedSubOptions').value = selected.join(',');
+                });
+            });
+            container.classList.remove('hidden');
+            addBtn.classList.remove('hidden');
+        }
+
+        document.getElementById('addServiceBtn').addEventListener('click', function() {
+            const cat = document.getElementById('serviceCategory').value;
+            if (!cat) return;
+            const subOptions = document.getElementById('selectedSubOptions').value
+                .split(',').filter(Boolean);
+            // Prevent duplicate category
+            if (addedServices.find(s => s.category === cat)) {
+                showError('You already added this service category.');
+                return;
+            }
+            addedServices.push({ category: cat, subOptions });
+            renderSelectedServices();
+            // Reset
+            document.getElementById('serviceCategory').value = '';
+            document.getElementById('subOptionsContainer').classList.add('hidden');
+            document.getElementById('addServiceBtn').classList.add('hidden');
+            document.getElementById('selectedSubOptions').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+
+        function renderSelectedServices() {
+            const list = document.getElementById('selectedServicesList');
+            const display = document.getElementById('selectedServicesDisplay');
+            if (!addedServices.length) { display.style.display = 'none'; return; }
+            display.style.display = 'block';
+            list.innerHTML = addedServices.map((s, i) => `
+                <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:rgba(65,228,222,0.12);border:1px solid rgba(65,228,222,0.3);font-size:13px;">
+                    <span>${s.category}${s.subOptions.length ? ' (' + s.subOptions.join(', ') + ')' : ''}</span>
+                    <span onclick="removeService(${i})" style="cursor:pointer;color:var(--pink);font-weight:700;margin-left:4px;">&times;</span>
+                </div>
+            `).join('');
+            document.getElementById('selectedServices').value = JSON.stringify(addedServices);
+        }
+
+        function removeService(i) {
+            addedServices.splice(i, 1);
+            renderSelectedServices();
         }
 
         const RATE_HINTS = {
@@ -514,7 +712,7 @@
             const country = document.getElementById('country').value;
             if (!country) { showError('Please select your country.'); setLoading(false); return; }
             if (role === 'provider') {
-                if (selectedServices.size === 0) { showError('Please select at least one service.'); setLoading(false); return; }
+                if (addedServices.length === 0) { showError('Please select at least one service.'); setLoading(false); return; }
                 const rateAmount = parseFloat(document.getElementById('rateAmount').value);
                 if (!rateAmount || rateAmount < 1) { showError('Please set a valid rate (minimum $1).'); setLoading(false); return; }
             }
@@ -534,7 +732,8 @@
             if (role === 'provider') {
                 const pricingType = document.getElementById('pricingType').value;
                 const rateAmount = parseFloat(document.getElementById('rateAmount').value);
-                body.services = Array.from(selectedServices);
+                body.services = addedServices.map(s => s.category);
+                body.serviceDetails = addedServices;
                 body.pricingType = pricingType;
                 body.rates = { [pricingType]: rateAmount };
                 body.hourlyRate = pricingType === 'hourly' ? rateAmount : undefined;

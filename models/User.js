@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
 
   // Provider specific fields
   services: [{ type: String }],
+  serviceDetails: [{
+    category: { type: String },
+    subOptions: [{ type: String }]
+  }],
   pricingType: { 
     type: String, 
     enum: ['hourly', 'daily', 'weekly', 'monthly', 'event'], 
