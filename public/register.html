@@ -411,6 +411,21 @@
                         </div>
                     </div>
 
+                    <div class="form-section">
+                        <div class="section-title">Verification Method</div>
+                        <div style="display:flex;gap:10px;">
+                            <button type="button" id="selectEmail" onclick="selectVerifyMethod('email')"
+                                style="flex:1;padding:12px;border-radius:18px;border:1px solid rgba(65,228,222,0.5);background:rgba(65,228,222,0.14);color:var(--cyan);font-size:13px;cursor:pointer;font-weight:700;">
+                                📧 Verify via Email
+                            </button>
+                            <button type="button" id="selectPhone" onclick="selectVerifyMethod('phone')"
+                                style="flex:1;padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--muted);font-size:13px;cursor:pointer;">
+                                📱 Verify via SMS
+                            </button>
+                        </div>
+                        <div class="help-text" style="margin-top:8px;">Choose how you want to receive your verification code.</div>
+                    </div>
+
                     <button type="submit" class="submit-button" id="registerBtn">
                         <span id="btnText">Create Account</span>
                         <span id="btnLoading" class="loading" style="display:none;"></span>
@@ -456,6 +471,14 @@
         let pendingPhone = '';
         let pendingEmail = '';
 
+        function selectVerifyMethod(method) {
+            verifyMethod = method;
+            const activeStyle = 'flex:1;padding:12px;border-radius:18px;border:1px solid rgba(65,228,222,0.5);background:rgba(65,228,222,0.14);color:var(--cyan);font-size:13px;cursor:pointer;font-weight:700;';
+            const inactiveStyle = 'flex:1;padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--muted);font-size:13px;cursor:pointer;';
+            document.getElementById('selectEmail').style.cssText = method === 'email' ? activeStyle : inactiveStyle;
+            document.getElementById('selectPhone').style.cssText = method === 'phone' ? activeStyle : inactiveStyle;
+        }
+
         function switchChannel(method) {
             verifyMethod = method;
             const activeStyle = 'padding:9px 18px;border-radius:999px;border:1px solid rgba(65,228,222,0.5);background:rgba(65,228,222,0.14);color:var(--cyan);font-size:13px;cursor:pointer;font-weight:700;';
@@ -484,7 +507,6 @@
             document.querySelector('.brand-copy p').textContent = 'Check your ' + (verifyMethod === 'phone' ? 'phone' : 'email') + ' for the verification code.';
             switchChannel(verifyMethod);
         }
-
         // Service category sub-options map
         const SERVICE_SUB_OPTIONS = {
             tutoring:          { label: 'Subjects', options: ['Mathematics','English','Sciences','History','Geography','Computer Science','Economics','Art','Music','Other'] },

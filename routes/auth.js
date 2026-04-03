@@ -67,16 +67,22 @@ async function sendOtpSms(phone, otp) {
 
   // Africa's Talking
   if (process.env.AT_API_KEY && process.env.AT_USERNAME) {
-    const AT = require('africastalking')({
-      apiKey: process.env.AT_API_KEY,
-      username: process.env.AT_USERNAME
-    });
-    await AT.SMS.send({
-      to: [normalised],
-      message: `Your Stand-In verification code is: ${otp}. Expires in 10 minutes.`,
-      from: process.env.AT_SENDER_ID || 'STANDIN'
-    });
-    return;
+    try {
+      const AT = require('africastalking')({
+        apiKey: process.env.AT_API_KEY,
+        username: process.env.AT_USERNAME
+      });
+      const result = await AT.SMS.send({
+        to: [normalised],
+        message: `Your Stand-In verification code is: ${otp}. Expires in 10 minutes.`,
+        from: process.env.AT_SENDER_ID || undefined
+      });
+      console.log('[SMS] Sent:', JSON.stringify(result));
+      return;
+    } catch (atErr) {
+      console.error('[SMS] Africa\'s Talking error:', atErr.message);
+      throw atErr;
+    }
   }
 
   // Dev fallback — log to console
