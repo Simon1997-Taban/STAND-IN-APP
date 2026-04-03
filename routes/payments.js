@@ -14,6 +14,8 @@ const {
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const Invoice = require('../models/Invoice');
+
 const COMMISSION_RATE = 0.10;
 
 const paymentLimiter = rateLimit({
@@ -245,6 +247,37 @@ router.post('/request/:requestId', auth, paymentLimiter, async (req, res) => {
       transactionId: transaction._id,
       breakdown: { currency: selectedCurrency, totalAmount, providerAmount: transaction.providerAmount, adminCommission: transaction.adminCommission, commissionRate: '10%' }
     });
+
+    // Auto-generate invoice in background
+    Invoice.findOne({ serviceRequest: serviceRequest._id, type: 'invoice' }).then(existing => {
+      if (!existing) {
+        const pricingType = serviceRequest.pricingType || 'hourly';
+        const durationUnitMap = { hourly:'hours', daily:'days', weekly:'weeks', monthly:'months', event:'event(s)' };
+        return new Invoice({
+          type: 'invoice',
+          serviceRequest: serviceRequest._id,
+          transaction: transaction._id,
+          client: serviceRequest.client._id,
+          provider: serviceRequest.provider._id,
+          serviceTitle: serviceRequest.title,
+          serviceType: serviceRequest.serviceType,
+          description: serviceRequest.description,
+          pricingType,
+          duration: serviceRequest.duration,
+          durationUnit: durationUnitMap[pricingType] || 'hours',
+          scheduledDate: serviceRequest.scheduledDate,
+          location: serviceRequest.location,
+          currency: selectedCurrency,
+          agreedRate: serviceRequest.agreedRate || 0,
+          subtotal: totalAmount,
+          adminCommission: transaction.adminCommission,
+          providerAmount: transaction.providerAmount,
+          totalAmount,
+          commissionRate: 10,
+          status: 'sent'
+        }).save();
+      }
+    }).catch(err => console.error('Invoice generation error:', err.message));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -270,6 +303,35 @@ router.post('/confirm-pin/:transactionId', auth, paymentLimiter, async (req, res
 
     const serviceRequest = await ServiceRequest.findById(transaction.serviceRequest);
     await finalizePayment(transaction, serviceRequest);
+
+    // Auto-generate receipt in background
+    Invoice.findOne({ serviceRequest: serviceRequest._id, type: 'receipt' }).then(existing => {
+      if (!existing) {
+        const durationUnitMap = { hourly:'hours', daily:'days', weekly:'weeks', monthly:'months', event:'event(s)' };
+        const pt = serviceRequest.pricingType || 'hourly';
+        return new Invoice({
+          type: 'receipt',
+          serviceRequest: serviceRequest._id,
+          transaction: transaction._id,
+          client: transaction.client,
+          provider: transaction.provider,
+          serviceTitle: serviceRequest.title,
+          serviceType: serviceRequest.serviceType,
+          pricingType: pt,
+          duration: serviceRequest.duration,
+          durationUnit: durationUnitMap[pt] || 'hours',
+          currency: transaction.currency,
+          agreedRate: serviceRequest.agreedRate || 0,
+          subtotal: transaction.totalAmount,
+          adminCommission: transaction.adminCommission,
+          providerAmount: transaction.providerAmount,
+          totalAmount: transaction.totalAmount,
+          commissionRate: 10,
+          status: 'paid',
+          paidAt: new Date()
+        }).save();
+      }
+    }).catch(err => console.error('Receipt generation error:', err.message));
 
     res.json({
       message: 'Payment confirmed successfully!',

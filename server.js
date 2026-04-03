@@ -80,6 +80,7 @@ app.use('/api/services',  require('./routes/services'));
 app.use('/api/requests',  require('./routes/requests'));
 app.use('/api/payments',  require('./routes/payments'));
 app.use('/api/locations', require('./routes/locations'));
+app.use('/api/invoices',  require('./routes/invoices'));
 app.use('/api/admin',     require('./routes/admin'));
 
 // ── Socket.IO ─────────────────────────────────────────────────────────────────
