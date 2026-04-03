@@ -245,6 +245,7 @@ router.post('/resend-otp', otpLimiter, async (req, res) => {
     user.otp = await bcrypt.hash(otp, 10);
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
+    const method = verifyMethod === 'phone' ? 'phone' : 'email';
     if (method === 'phone') {
       res.json({ message: 'A new code has been sent to your phone number.' });
       sendOtpSms(user.phone, otp).catch(err => console.error('SMS error:', err.message));
