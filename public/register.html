@@ -423,8 +423,13 @@
                     <h3>Verify Your Account</h3>
                     <p id="otpDesc">We sent a 6-digit code to <strong id="otpEmailHint"></strong>.<br>Enter it below to activate your account.</p>
 
-
-
+                    <!-- Channel toggle -->
+                    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
+                        <button type="button" id="switchToEmail" onclick="switchChannel('email')"
+                            style="padding:9px 18px;border-radius:999px;border:1px solid rgba(65,228,222,0.5);background:rgba(65,228,222,0.14);color:var(--cyan);font-size:13px;cursor:pointer;font-weight:700;">📧 Email</button>
+                        <button type="button" id="switchToPhone" onclick="switchChannel('phone')"
+                            style="padding:9px 18px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--muted);font-size:13px;cursor:pointer;">📱 SMS</button>
+                    </div>
                     <div id="otpError" class="msg error"></div>
                     <form id="otpForm">
                         <input type="text" class="otp-input" id="otpInput" maxlength="6" placeholder="000000" autocomplete="one-time-code" inputmode="numeric" required>
@@ -451,13 +456,33 @@
         let pendingPhone = '';
         let pendingEmail = '';
 
+        function switchChannel(method) {
+            verifyMethod = method;
+            const activeStyle = 'padding:9px 18px;border-radius:999px;border:1px solid rgba(65,228,222,0.5);background:rgba(65,228,222,0.14);color:var(--cyan);font-size:13px;cursor:pointer;font-weight:700;';
+            const inactiveStyle = 'padding:9px 18px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--muted);font-size:13px;cursor:pointer;';
+            if (method === 'phone') {
+                document.getElementById('switchToPhone').style.cssText = activeStyle;
+                document.getElementById('switchToEmail').style.cssText = inactiveStyle;
+                document.getElementById('otpIcon').textContent = '\uD83D\uDCF1';
+                document.getElementById('otpDesc').innerHTML = 'Enter the code sent to <strong>' + pendingPhone + '</strong>.<br>Click <em>Resend code</em> to send via SMS.';
+            } else {
+                document.getElementById('switchToEmail').style.cssText = activeStyle;
+                document.getElementById('switchToPhone').style.cssText = inactiveStyle;
+                document.getElementById('otpIcon').textContent = '\uD83D\uDCE7';
+                document.getElementById('otpDesc').innerHTML = 'Enter the code sent to <strong>' + pendingEmail + '</strong>.<br>Click <em>Resend code</em> to resend.';
+            }
+        }
+
         function showOtpScreen() {
-            document.getElementById('otpDesc').innerHTML = 'We sent a 6-digit code to <strong>' + pendingEmail + '</strong>.<br>Enter it below to activate your account.';
+            const hint = verifyMethod === 'phone' ? pendingPhone : pendingEmail;
+            document.getElementById('otpDesc').innerHTML = 'We sent a 6-digit code to <strong>' + hint + '</strong>.<br>Enter it below to activate your account.';
+            document.getElementById('otpIcon').textContent = verifyMethod === 'phone' ? '\uD83D\uDCF1' : '\uD83D\uDCE7';
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('otpScreen').style.display = 'block';
             document.getElementById('footerRow').style.display = 'none';
             document.getElementById('errorMessage').style.display = 'none';
-            document.querySelector('.brand-copy p').textContent = 'Check your email for the verification code.';
+            document.querySelector('.brand-copy p').textContent = 'Check your ' + (verifyMethod === 'phone' ? 'phone' : 'email') + ' for the verification code.';
+            switchChannel(verifyMethod);
         }
 
         // Service category sub-options map

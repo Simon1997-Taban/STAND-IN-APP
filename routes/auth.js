@@ -51,13 +51,10 @@ async function sendOtpEmail(email, name, otp) {
   });
 }
 
-// SMS via email-to-SMS gateway (works without Twilio).
-// To upgrade to real SMS: replace this function body with a Twilio API call.
 async function sendOtpSms(phone, otp) {
-  // Normalise: strip spaces/dashes, ensure + prefix
   const normalised = phone.replace(/[\s\-()]/g, '');
 
-  // If TWILIO_ACCOUNT_SID is configured, use Twilio
+  // Twilio if configured
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE) {
     const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
     await twilio.messages.create({
@@ -68,11 +65,24 @@ async function sendOtpSms(phone, otp) {
     return;
   }
 
-  // No Twilio configured — log OTP to console for development
-  console.warn(`[DEV] SMS OTP for ${normalised}: ${otp} (configure Twilio in .env for real SMS)`);
-  // In production without Twilio, throw so caller knows SMS failed
+  // Africa's Talking
+  if (process.env.AT_API_KEY && process.env.AT_USERNAME) {
+    const AT = require('africastalking')({
+      apiKey: process.env.AT_API_KEY,
+      username: process.env.AT_USERNAME
+    });
+    await AT.SMS.send({
+      to: [normalised],
+      message: `Your Stand-In verification code is: ${otp}. Expires in 10 minutes.`,
+      from: process.env.AT_SENDER_ID || 'STANDIN'
+    });
+    return;
+  }
+
+  // Dev fallback — log to console
+  console.warn(`[DEV] SMS OTP for ${normalised}: ${otp}`);
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('SMS service not configured. Please use email verification.');
+    throw new Error('No SMS service configured.');
   }
 }
 
