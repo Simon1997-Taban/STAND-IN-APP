@@ -104,7 +104,8 @@ async function loadUsers() {
         });
 
         if (response.ok) {
-            allUsers = await response.json();
+            const data = await response.json();
+            allUsers = data.users || data;
             displayUsers(allUsers);
             renderRecentActivity();
         }
@@ -142,7 +143,7 @@ function displayUsers(users) {
                 <td>${formatDate(user.createdAt)}</td>
                 <td>
                     <div class="panel-actions">
-                        <button class="${user.isVerified ? 'btn-secondary' : 'btn-success'}" onclick="toggleVerification('${user._id}', ${!user.isVerified})">${user.isVerified ? 'Unverify' : 'Verify'}</button>
+                        ${user.role === 'provider' ? `<button class="${user.isVerified ? 'btn-secondary' : 'btn-success'}" onclick="toggleVerification('${user._id}', ${!user.isVerified})">${user.isVerified ? 'Revoke' : 'Approve'}</button>` : ''}
                         <button class="${user.isActive ? 'btn-danger' : 'btn-outline'}" onclick="toggleUserStatus('${user._id}', ${!user.isActive})">${user.isActive ? 'Deactivate' : 'Activate'}</button>
                     </div>
                 </td>
@@ -158,7 +159,8 @@ async function loadRequests() {
         });
 
         if (response.ok) {
-            allRequests = await response.json();
+            const data = await response.json();
+            allRequests = data.requests || data;
             displayRequests(allRequests);
             renderRecentActivity();
         }
