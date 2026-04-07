@@ -168,7 +168,7 @@
             <div class="card-scroll">
                 <div class="brand-copy">
                     <h2>CREATE ACCOUNT</h2>
-                    <p>Your email will be verified with a 6-digit code before you can log in.</p>
+                    <p>Create your account and start using Stand-In right away.</p>
                 </div>
 
                 <div id="errorMessage" class="msg error"></div>
@@ -802,9 +802,16 @@
             console.log('Register response:', ok, data);
 
             if (ok) {
-                pendingUserId = data.userId;
-                verifyMethod = data.verifyMethod || 'email';
-                showOtpScreen();
+                if (data.skipOtp) {
+                    // OTP disabled for trial — go straight to dashboard
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = data.user.role === 'admin' ? 'admin-dashboard.html' : (setupLaterChecked ? 'dashboard.html' : 'payment-setup.html');
+                } else {
+                    pendingUserId = data.userId;
+                    verifyMethod = data.verifyMethod || 'email';
+                    showOtpScreen();
+                }
             } else if (data.message && data.message.includes('already exists')) {
                 // Account created but tab was closed before OTP — let them verify now
                 // Fetch the userId by attempting resend with email

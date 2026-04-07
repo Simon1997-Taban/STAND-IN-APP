@@ -157,7 +157,33 @@ router.post('/register', authLimiter, async (req, res) => {
 
     await user.save();
 
-    // Respond immediately — don't wait for OTP to avoid timeout
+    // OTP verification temporarily disabled for trial
+    // Re-enable by uncommenting the OTP send block below
+    user.emailVerified = true;
+    user.isActive = true;
+    await user.save();
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      message: 'Account created successfully. You can now log in.',
+      userId: user._id,
+      token,
+      user: {
+        id: user._id, name: user.name, email: user.email,
+        phone: user.phone, role: user.role, location: user.location,
+        country: user.country, preferredCurrency: user.preferredCurrency,
+        bio: user.bio, profileImage: user.profileImage
+      },
+      skipOtp: true
+    });
+
+    /* OTP BLOCK — uncomment to re-enable verification
+    // Respond immediately
     res.status(201).json({
       message: method === 'phone'
         ? 'Account created. Check your phone for a 6-digit verification code.'
@@ -165,14 +191,13 @@ router.post('/register', authLimiter, async (req, res) => {
       userId: user._id,
       verifyMethod: method
     });
-
-    // Send OTP in background
     if (method === 'phone') {
       sendOtpSms(phone.trim(), otp).catch(err => console.error('OTP SMS error:', err.message));
     } else {
       sendOtpEmail(normalizedEmail, name.trim(), otp).catch(err => console.error('OTP email error:', JSON.stringify(err)));
     }
     console.log(`[OTP] Code ${otp} for ${normalizedEmail} via ${method}`);
+    */
   } catch (error) {
     res.status(500).json({ message: 'Registration failed. Please try again.' });
   }
