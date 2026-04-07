@@ -347,11 +347,12 @@ router.post('/login', authLimiter, async (req, res) => {
     if (!user || !passwordMatch)
       return res.status(401).json({ message: 'Invalid email or password' });
 
-    if (!user.emailVerified)
-      return res.status(403).json({ message: 'Please verify your email before logging in.', userId: user._id, needsVerification: true });
-
-    if (!user.isActive)
-      return res.status(403).json({ message: 'Your account has been deactivated. Contact support.' });
+    // Auto-verify unverified users during trial period
+    if (!user.emailVerified || !user.isActive) {
+      user.emailVerified = true;
+      user.isActive = true;
+      await user.save();
+    }
 
     const token = jwt.sign(
       { userId: user._id, role: user.role },
